@@ -32,6 +32,21 @@ def listStudentLearningContexts(
     )
 
 
+@router.delete(
+    "/{studentId}/learning-contexts/{studentLearningContextId}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def deactivateLearningContext(
+    studentId: UUID,
+    studentLearningContextId: UUID,
+    session: Session = Depends(getDatabaseSession),
+) -> None:
+    StudentLearningContextService(session).deactivateLearningContext(
+        studentId,
+        studentLearningContextId,
+    )
+
+
 @router.post(
     "/{studentId}/learning-contexts/{learningContextId}",
     response_model=StudentLearningContextViewContract,

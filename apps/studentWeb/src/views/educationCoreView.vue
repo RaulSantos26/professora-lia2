@@ -244,6 +244,48 @@ async function selectStudent(student: StudentContract) {
     showError(error)
   }
 }
+async function deactivateLearningContext(
+  studentLearningContextId: string,
+  contextName: string
+) {
+  if (!selectedStudent.value) return
+
+  try {
+    await learningContextApiService.deactivateLearningContext(
+      selectedStudent.value.studentId,
+      studentLearningContextId
+    )
+    assignedContexts.value =
+      await learningContextApiService.listStudentLearningContexts(
+        selectedStudent.value.studentId
+      )
+
+    if (
+      selectedStudentLearningContextId.value
+      === studentLearningContextId
+    ) {
+      const next = assignedContexts.value[0] ?? null
+      selectedStudentLearningContextId.value = null
+      selectedStudentSubject.value = null
+      studentSubjects.value = []
+      studentLearningUnits.value = []
+
+      if (next) {
+        await selectStudentLearningContext(
+          next.association.studentLearningContextId
+        )
+      }
+    }
+
+    await refreshGuide()
+    await refreshWorkspaceSummary()
+    successMessage.value =
+      `Contexto "${contextName}" removido dos ativos.`
+  } catch (error) {
+    showError(error)
+  }
+}
+
 async function createAcademicStage(payload: AcademicStageCreateContract) {
   if (!selectedStudent.value) return
   try {
@@ -878,6 +920,7 @@ onMounted(async () => {
           :current-academic-stage="currentAcademicStage"
           :busy="busy"
           @assign="assignLearningContext"
+          @deactivate="deactivateLearningContext"
         />
       </div>
       <StudentSubjectPanel

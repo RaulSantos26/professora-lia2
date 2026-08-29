@@ -45,6 +45,13 @@ class StudentLearningContextRepository:
         )
         return self.session.scalar(statement)
 
+    def deactivate(
+        self,
+        association: StudentLearningContextModel,
+    ) -> None:
+        association.status = "INACTIVE"
+        self.session.flush()
+
     def listActiveByStudentId(
         self,
         studentId: UUID,

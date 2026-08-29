@@ -46,6 +46,41 @@ const lastX = ref(0)
 const lastY = ref(0)
 const selectedNodeId = ref<string | null>(null)
 const expanded = ref(false)
+const customPositions = ref<
+  Record<string, { x: number, y: number }>
+>({})
+const draggedNodeId = ref<string | null>(null)
+
+const layoutStorageKey = computed(
+  () => [
+    'lia2-mind-map-layout',
+    String(props.spec.rootId ?? 'root'),
+    String(props.spec.title ?? 'mapa')
+  ].join(':')
+)
+
+function loadCustomPositions() {
+  try {
+    const saved = window.localStorage.getItem(
+      layoutStorageKey.value
+    )
+    customPositions.value = saved
+      ? JSON.parse(saved) as Record<string, {
+          x: number
+          y: number
+        }>
+      : {}
+  } catch {
+    customPositions.value = {}
+  }
+}
+
+function saveCustomPositions() {
+  window.localStorage.setItem(
+    layoutStorageKey.value,
+    JSON.stringify(customPositions.value)
+  )
+}
 
 function iconFor(node: Pick<MindNode, 'label' | 'detail' | 'parentId'>) {
   const value = `${node.label} ${node.detail}`.toLocaleLowerCase()
@@ -66,7 +101,7 @@ function iconFor(node: Pick<MindNode, 'label' | 'detail' | 'parentId'>) {
   return node.parentId ? '✦' : '🧠'
 }
 
-const nodes = computed<MindNode[]>(() => {
+const baseNodes = computed<MindNode[]>(() => {
   const source = (
     Array.isArray(props.spec.nodes)
       ? props.spec.nodes as MindNode[]
@@ -164,6 +199,10 @@ const nodes = computed<MindNode[]>(() => {
     })
     seen.add(node.nodeId)
 
+    if (depth === 0) {
+      return
+    }
+
     const childNodes = (children.get(node.nodeId) ?? [])
       .filter(child => !next.has(child.nodeId))
     const step = Math.min(
@@ -227,6 +266,13 @@ const nodes = computed<MindNode[]>(() => {
   }))
 })
 
+const nodes = computed(
+  () => baseNodes.value.map(node => ({
+    ...node,
+    ...(customPositions.value[node.nodeId] ?? {})
+  }))
+)
+
 const viewport = computed(() => ({
   width: Math.max(
     1160,
@@ -258,18 +304,14 @@ const edges = computed(
 const selectedNode = computed(
   () => nodes.value.find(
     node => node.nodeId === selectedNodeId.value
-  ) ?? nodes.value.find(node => node.isRoot) ?? null
+  ) ?? null
 )
 
 watch(
-  nodes,
-  value => {
-    if (
-      value.length > 0
-      && !value.some(node => node.nodeId === selectedNodeId.value)
-    ) {
-      selectedNodeId.value = value[0].nodeId
-    }
+  layoutStorageKey,
+  () => {
+    selectedNodeId.value = null
+    loadCustomPositions()
   },
   { immediate: true }
 )
@@ -329,15 +371,61 @@ function pointerDown(event: PointerEvent) {
     .setPointerCapture(event.pointerId)
 }
 
-function pointerMove(event: PointerEvent) {
-  if (!dragging.value) return
-  offsetX.value += event.clientX - lastX.value
-  offsetY.value += event.clientY - lastY.value
+function nodePointerDown(
+  event: PointerEvent,
+  node: MindNode
+) {
+  draggedNodeId.value = node.nodeId
   lastX.value = event.clientX
   lastY.value = event.clientY
+  ;(event.currentTarget as SVGGElement)
+    .ownerSVGElement
+    ?.setPointerCapture(event.pointerId)
+}
+
+function pointerMove(event: PointerEvent) {
+  const deltaX = event.clientX - lastX.value
+  const deltaY = event.clientY - lastY.value
+  lastX.value = event.clientX
+  lastY.value = event.clientY
+
+  if (draggedNodeId.value) {
+    const current = nodes.value.find(
+      node => node.nodeId === draggedNodeId.value
+    )
+
+    if (!current) return
+
+    const svg = event.currentTarget as SVGSVGElement
+    const scaleX = viewport.value.width / Math.max(
+      svg.clientWidth,
+      1
+    ) / scale.value
+    const scaleY = viewport.value.height / Math.max(
+      svg.clientHeight,
+      1
+    ) / scale.value
+
+    customPositions.value = {
+      ...customPositions.value,
+      [current.nodeId]: {
+        x: (current.x ?? 0) + deltaX * scaleX,
+        y: (current.y ?? 0) + deltaY * scaleY
+      }
+    }
+    return
+  }
+
+  if (!dragging.value) return
+  offsetX.value += deltaX
+  offsetY.value += deltaY
 }
 
 function pointerUp() {
+  if (draggedNodeId.value) {
+    saveCustomPositions()
+  }
+  draggedNodeId.value = null
   dragging.value = false
 }
 
@@ -345,6 +433,12 @@ function resetView() {
   scale.value = 1
   offsetX.value = 0
   offsetY.value = 0
+}
+
+function resetBranches() {
+  customPositions.value = {}
+  window.localStorage.removeItem(layoutStorageKey.value)
+  selectedNodeId.value = null
 }
 
 function toggleExpanded() {
@@ -383,13 +477,15 @@ onBeforeUnmount(() => {
       <button type="button" aria-label="Aumentar mapa" @click="scale = Math.min(2.3, scale + 0.1)">+</button>
       <button type="button" aria-label="Diminuir mapa" @click="scale = Math.max(0.45, scale - 0.1)">−</button>
       <button type="button" @click="resetView">Ajustar à tela</button>
+      <button type="button" @click="resetBranches">Restaurar ramos</button>
       <button type="button" class="mindMapExpandButton" @click="toggleExpanded">
         {{ expanded ? 'Fechar' : 'Abrir em tela cheia' }}
       </button>
     </div>
 
     <p class="mindMapHint">
-      Cada cor representa uma ideia principal. Toque em um ramo para ler a explicação.
+      Cada cor representa uma ideia principal. Arraste um ramo para ajustar
+      a posição; toque nele para ver a explicação.
     </p>
 
     <div class="mindMapSvgViewport">
@@ -426,6 +522,7 @@ onBeforeUnmount(() => {
             :data-selected="selectedNodeId === node.nodeId"
             :style="{ '--branch-color': node.color }"
             :transform="`translate(${node.x} ${node.y})`"
+            @pointerdown.stop="nodePointerDown($event, node)"
             @click.stop="selectedNodeId = node.nodeId"
           >
             <rect

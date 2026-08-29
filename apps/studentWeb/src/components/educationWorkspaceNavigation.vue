@@ -1,43 +1,33 @@
 <script setup lang="ts">
+import { ref } from 'vue'
+
 import type { EducationWorkspaceSection } from '../types/educationWorkspaceSection'
 
 defineProps<{
   activeSection: EducationWorkspaceSection
   recommendedSection: EducationWorkspaceSection | null
-
   studentSummary: string
   studentCount: number
-
   academicStageSummary: string
   academicStageCount: number
-
   learningContextSummary: string
   learningContextCount: number
-
   subjectSummary: string
   subjectCount: number
-
   learningUnitSummary: string
   learningUnitCount: number
-
   materialSummary: string
   materialCount: number
-
   pedagogicalSummary: string
   pedagogicalCount: number
-
   liaTutorSummary: string
   liaTutorCount: number
-
   learningGoalSummary: string
   learningGoalCount: number
-
   studyScopeSummary: string
   studyScopeCount: number
-
   studySessionSummary: string
   studySessionCount: number
-
   learningProgressSummary: string
   learningProgressCount: number
 }>()
@@ -45,216 +35,128 @@ defineProps<{
 const emit = defineEmits<{
   select: [section: EducationWorkspaceSection]
 }>()
+
+const showOrganization = ref(false)
 </script>
 
 <template>
-  <nav
-    class="workspaceNavigation"
-    aria-label="Navegação do Learning Workspace"
-  >
+  <nav class="studentJourneyNav" aria-label="Jornada de estudo">
     <button
       type="button"
-      class="workspaceNavigationCard"
+      class="journeyStudentButton"
       :data-active="activeSection === 'STUDENT'"
-      @click="emit('select','STUDENT')"
+      @click="emit('select', 'STUDENT')"
     >
-      <span class="workspaceNavigationText">
-        <small class="eyebrow">STUDENT</small>
-        <strong>Alunos</strong>
-        <span>{{ studentSummary }}</span>
+      <span aria-hidden="true">👤</span>
+      <span>
+        <small>ALUNA</small>
+        <strong>{{ studentSummary }}</strong>
       </span>
-      <span class="countBadge">{{ studentCount }}</span>
     </button>
 
-    <button
-      type="button"
-      class="workspaceNavigationCard"
-      :data-active="activeSection === 'ACADEMIC_STAGE'"
-      :data-recommended="recommendedSection === 'ACADEMIC_STAGE'"
-      @click="emit('select','ACADEMIC_STAGE')"
-    >
-      <span class="workspaceNavigationText">
-        <small class="eyebrow">ACADEMIC STAGE</small>
-        <strong>Etapa</strong>
-        <span>{{ academicStageSummary }}</span>
-      </span>
-      <span v-if="recommendedSection === 'ACADEMIC_STAGE'" class="nextBadge">PRÓXIMO</span>
-      <span v-else class="countBadge">{{ academicStageCount }}</span>
-    </button>
-
-    <button
-      type="button"
-      class="workspaceNavigationCard"
-      :data-active="activeSection === 'LEARNING_CONTEXT'"
-      :data-recommended="recommendedSection === 'LEARNING_CONTEXT'"
-      @click="emit('select','LEARNING_CONTEXT')"
-    >
-      <span class="workspaceNavigationText">
-        <small class="eyebrow">LEARNING CONTEXT</small>
-        <strong>Contextos</strong>
-        <span>{{ learningContextSummary }}</span>
-      </span>
-      <span v-if="recommendedSection === 'LEARNING_CONTEXT'" class="nextBadge">PRÓXIMO</span>
-      <span v-else class="countBadge">{{ learningContextCount }}</span>
-    </button>
-
-    <button
-      type="button"
-      class="workspaceNavigationCard"
-      :data-active="activeSection === 'SUBJECT'"
-      :data-recommended="recommendedSection === 'SUBJECT'"
-      @click="emit('select','SUBJECT')"
-    >
-      <span class="workspaceNavigationText">
-        <small class="eyebrow">SUBJECT</small>
-        <strong>Matérias</strong>
-        <span>{{ subjectSummary }}</span>
-      </span>
-      <span v-if="recommendedSection === 'SUBJECT'" class="nextBadge">PRÓXIMO</span>
-      <span v-else class="countBadge">{{ subjectCount }}</span>
-    </button>
-
-    <button
-      type="button"
-      class="workspaceNavigationCard"
-      :data-active="activeSection === 'LEARNING_UNIT'"
-      :data-recommended="recommendedSection === 'LEARNING_UNIT'"
-      @click="emit('select','LEARNING_UNIT')"
-    >
-      <span class="workspaceNavigationText">
-        <small class="eyebrow">LEARNING UNIT</small>
-        <strong>Unidades</strong>
-        <span>{{ learningUnitSummary }}</span>
-      </span>
-      <span v-if="recommendedSection === 'LEARNING_UNIT'" class="nextBadge">PRÓXIMO</span>
-      <span v-else class="countBadge">{{ learningUnitCount }}</span>
-    </button>
-
-    <button
-      type="button"
-      class="workspaceNavigationCard"
-      :data-active="activeSection === 'MATERIAL'"
-      :data-recommended="recommendedSection === 'MATERIAL'"
-      @click="emit('select','MATERIAL')"
-    >
-      <span class="workspaceNavigationText">
-        <small class="eyebrow">CONTENT & MATERIAL</small>
-        <strong>Materiais</strong>
-        <span>{{ materialSummary }}</span>
-      </span>
-      <span v-if="recommendedSection === 'MATERIAL'" class="nextBadge">PRÓXIMO</span>
-      <span v-else class="countBadge">{{ materialCount }}</span>
-    </button>
-
-    <button
-      type="button"
-      class="workspaceNavigationCard pedagogicalNavigationCard"
-      :data-active="activeSection === 'PEDAGOGICAL'"
-      :data-recommended="recommendedSection === 'PEDAGOGICAL'"
-      @click="emit('select','PEDAGOGICAL')"
-    >
-      <span class="workspaceNavigationText">
-        <small class="eyebrow">PEDAGOGICAL ENGINE</small>
-        <strong>Estudar</strong>
-        <span>{{ pedagogicalSummary }}</span>
-      </span>
-      <span
-        v-if="recommendedSection === 'PEDAGOGICAL'"
-        class="nextBadge"
+    <div class="journeyMainSteps">
+      <button
+        type="button"
+        :data-active="
+          activeSection === 'SUBJECT'
+          || activeSection === 'LEARNING_UNIT'
+        "
+        :data-recommended="
+          recommendedSection === 'SUBJECT'
+          || recommendedSection === 'LEARNING_UNIT'
+        "
+        :disabled="studentCount === 0"
+        @click="emit('select', 'SUBJECT')"
       >
-        PRÓXIMO
-      </span>
-      <span v-else class="countBadge">
-        {{ pedagogicalCount }}
-      </span>
-    </button>
+        <span aria-hidden="true">📚</span>
+        <span>
+          <strong>Minhas lições</strong>
+          <small>Escolher matéria e lição</small>
+        </span>
+      </button>
 
-    <button
-      type="button"
-      class="workspaceNavigationCard liaTutorNavigationCard"
-      :data-active="activeSection === 'LIA_TUTOR'"
-      :data-recommended="recommendedSection === 'LIA_TUTOR'"
-      @click="emit('select','LIA_TUTOR')"
-    >
-      <span class="workspaceNavigationText">
-        <small class="eyebrow">AGENTIC TUTOR</small>
-        <strong>Lia</strong>
-        <span>{{ liaTutorSummary }}</span>
-      </span>
-
-      <span
-        v-if="recommendedSection === 'LIA_TUTOR'"
-        class="nextBadge"
+      <button
+        type="button"
+        :data-active="activeSection === 'MATERIAL'"
+        :data-recommended="recommendedSection === 'MATERIAL'"
+        :disabled="studentCount === 0"
+        @click="emit('select', 'MATERIAL')"
       >
-        PRÓXIMO
-      </span>
-      <span v-else class="countBadge">
-        {{ liaTutorCount }}
-      </span>
-    </button>
+        <span aria-hidden="true">📷</span>
+        <span>
+          <strong>Materiais</strong>
+          <small>Fotos e arquivos da lição</small>
+        </span>
+      </button>
+
+      <button
+        type="button"
+        :data-active="activeSection === 'PEDAGOGICAL'"
+        :data-recommended="recommendedSection === 'PEDAGOGICAL'"
+        :disabled="studentCount === 0"
+        @click="emit('select', 'PEDAGOGICAL')"
+      >
+        <span aria-hidden="true">✏️</span>
+        <span>
+          <strong>Estudar</strong>
+          <small>Resumo, mapa e exercícios</small>
+        </span>
+      </button>
+
+      <button
+        type="button"
+        :data-active="activeSection === 'LIA_TUTOR'"
+        :data-recommended="recommendedSection === 'LIA_TUTOR'"
+        :disabled="studentCount === 0"
+        @click="emit('select', 'LIA_TUTOR')"
+      >
+        <span aria-hidden="true">💬</span>
+        <span>
+          <strong>Conversar com a Lia</strong>
+          <small>Tirar dúvidas da lição</small>
+        </span>
+      </button>
+
+      <button
+        type="button"
+        :data-active="activeSection === 'LEARNING_PROGRESS'"
+        :disabled="studentCount === 0"
+        @click="emit('select', 'LEARNING_PROGRESS')"
+      >
+        <span aria-hidden="true">🌱</span>
+        <span>
+          <strong>Meu progresso</strong>
+          <small>Acompanhar a aprendizagem</small>
+        </span>
+      </button>
+    </div>
 
     <button
       type="button"
-      class="workspaceNavigationCard"
-      :data-active="activeSection === 'LEARNING_GOAL'"
-      :data-recommended="recommendedSection === 'LEARNING_GOAL'"
-      @click="emit('select','LEARNING_GOAL')"
+      class="journeyOrganizationToggle"
+      :aria-expanded="showOrganization"
+      @click="showOrganization = !showOrganization"
     >
-      <span class="workspaceNavigationText">
-        <small class="eyebrow">LEARNING GOAL</small>
-        <strong>Objetivos</strong>
-        <span>{{ learningGoalSummary }}</span>
-      </span>
-      <span v-if="recommendedSection === 'LEARNING_GOAL'" class="nextBadge">PRÓXIMO</span>
-      <span v-else class="countBadge">{{ learningGoalCount }}</span>
+      Organização e planejamento
+      <span aria-hidden="true">{{ showOrganization ? '⌃' : '⌄' }}</span>
     </button>
 
-    <button
-      type="button"
-      class="workspaceNavigationCard"
-      :data-active="activeSection === 'STUDY_SCOPE'"
-      :data-recommended="recommendedSection === 'STUDY_SCOPE'"
-      @click="emit('select','STUDY_SCOPE')"
-    >
-      <span class="workspaceNavigationText">
-        <small class="eyebrow">STUDY SCOPE</small>
-        <strong>Escopos</strong>
-        <span>{{ studyScopeSummary }}</span>
-      </span>
-      <span v-if="recommendedSection === 'STUDY_SCOPE'" class="nextBadge">PRÓXIMO</span>
-      <span v-else class="countBadge">{{ studyScopeCount }}</span>
-    </button>
-
-    <button
-      type="button"
-      class="workspaceNavigationCard"
-      :data-active="activeSection === 'STUDY_SESSION'"
-      :data-recommended="recommendedSection === 'STUDY_SESSION'"
-      @click="emit('select','STUDY_SESSION')"
-    >
-      <span class="workspaceNavigationText">
-        <small class="eyebrow">STUDY SESSION</small>
-        <strong>Sessões</strong>
-        <span>{{ studySessionSummary }}</span>
-      </span>
-      <span v-if="recommendedSection === 'STUDY_SESSION'" class="nextBadge">PRÓXIMO</span>
-      <span v-else class="countBadge">{{ studySessionCount }}</span>
-    </button>
-
-    <button
-      type="button"
-      class="workspaceNavigationCard"
-      :data-active="activeSection === 'LEARNING_PROGRESS'"
-      :data-recommended="recommendedSection === 'LEARNING_PROGRESS'"
-      @click="emit('select','LEARNING_PROGRESS')"
-    >
-      <span class="workspaceNavigationText">
-        <small class="eyebrow">LEARNING STATE</small>
-        <strong>Progresso</strong>
-        <span>{{ learningProgressSummary }}</span>
-      </span>
-      <span v-if="recommendedSection === 'LEARNING_PROGRESS'" class="nextBadge">PRÓXIMO</span>
-      <span v-else class="countBadge">{{ learningProgressCount }}</span>
-    </button>
+    <div v-if="showOrganization" class="journeyOrganization">
+      <button type="button" @click="emit('select', 'ACADEMIC_STAGE')">
+        Etapa escolar
+      </button>
+      <button type="button" @click="emit('select', 'LEARNING_CONTEXT')">
+        Contextos de estudo
+      </button>
+      <button type="button" @click="emit('select', 'LEARNING_GOAL')">
+        Objetivos
+      </button>
+      <button type="button" @click="emit('select', 'STUDY_SCOPE')">
+        Plano de estudo
+      </button>
+      <button type="button" @click="emit('select', 'STUDY_SESSION')">
+        Sessões
+      </button>
+    </div>
   </nav>
 </template>

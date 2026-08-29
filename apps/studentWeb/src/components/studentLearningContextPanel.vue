@@ -14,10 +14,34 @@ defineProps<{
 
 const emit = defineEmits<{
   assign: [learningContextId: string, academicStageId: string | null]
+  deactivate: [
+    studentLearningContextId: string,
+    contextName: string
+  ]
 }>()
 
 function isAssigned(learningContextId: string): boolean {
-  return false
+  return props.assignedContexts.some(
+    item =>
+      item.context.learningContextId === learningContextId
+  )
+}
+
+function confirmDeactivate(
+  item: StudentLearningContextViewContract
+) {
+  if (
+    window.confirm(
+      `Remover "${item.context.name}" dos contextos ativos?\n\n`
+      + 'As lições e materiais já criados serão preservados.'
+    )
+  ) {
+    emit(
+      'deactivate',
+      item.association.studentLearningContextId,
+      item.context.name
+    )
+  }
 }
 </script>
 
@@ -41,7 +65,17 @@ function isAssigned(learningContextId: string): boolean {
           <strong>{{ item.context.name }}</strong>
           <p>{{ item.context.contextType }} · {{ item.context.code }}</p>
         </div>
-        <span data-status="ONLINE">ACTIVE</span>
+        <div class="contextRowActions">
+          <span data-status="ONLINE">ATIVO</span>
+          <button
+            type="button"
+            class="secondaryButton"
+            :disabled="busy"
+            @click="confirmDeactivate(item)"
+          >
+            Remover
+          </button>
+        </div>
       </article>
     </div>
 
@@ -66,9 +100,7 @@ function isAssigned(learningContextId: string): boolean {
           type="button"
           :disabled="
             busy ||
-            assignedContexts.some(
-              item => item.context.learningContextId === context.learningContextId
-            )
+            isAssigned(context.learningContextId)
           "
           @click="
             emit(
@@ -79,9 +111,7 @@ function isAssigned(learningContextId: string): boolean {
           "
         >
           {{
-            assignedContexts.some(
-              item => item.context.learningContextId === context.learningContextId
-            )
+            isAssigned(context.learningContextId)
               ? 'Vinculado'
               : 'Vincular'
           }}

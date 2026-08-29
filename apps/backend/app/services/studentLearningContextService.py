@@ -102,6 +102,35 @@ class StudentLearningContextService:
             context=LearningContextMapper.toContract(learningContext),
         )
 
+    def deactivateLearningContext(
+        self,
+        studentId: UUID,
+        studentLearningContextId: UUID,
+    ) -> None:
+        association = self.studentLearningContextRepository.findById(
+            studentLearningContextId
+        )
+
+        if (
+            association is None
+            or association.studentId != studentId
+        ):
+            raise DomainError(
+                code="STUDENT_LEARNING_CONTEXT_NOT_FOUND",
+                message="Contexto do aluno não encontrado.",
+                httpStatus=404,
+            )
+
+        if association.status != "ACTIVE":
+            raise DomainError(
+                code="STUDENT_LEARNING_CONTEXT_NOT_ACTIVE",
+                message="Esse contexto já não está ativo.",
+                httpStatus=409,
+            )
+
+        self.studentLearningContextRepository.deactivate(association)
+        self.session.commit()
+
     def listStudentLearningContexts(
         self,
         studentId: UUID,
