@@ -381,16 +381,10 @@ class MaterialService:
         studentId: UUID,
         materialId: UUID,
     ) -> None:
-        self._requireOwnedMaterial(studentId, materialId)
+        material = self._requireOwnedMaterial(studentId, materialId)
 
-        activeJobs = self.jobRepository.listActiveByStudentId(
-            studentId
-        )
-
-        if any(
-            job.materialId == materialId
-            for job in activeJobs
-        ):
+        activeJobs = self.jobRepository.listActiveByStudentId(studentId)
+        if any(job.materialId == materialId for job in activeJobs):
             raise DomainError(
                 code="MATERIAL_PROCESSING_ACTIVE",
                 message=(
@@ -402,15 +396,12 @@ class MaterialService:
 
         activePedagogical = [
             artifact
-            for artifact in self.pedagogicalRepository.listAllByStudent(
-                studentId
-            )
+            for artifact in self.pedagogicalRepository.listAllByStudent(studentId)
             if (
                 str(materialId) in (artifact.sourceMaterialIds or [])
                 and artifact.status in {"QUEUED", "RUNNING"}
             )
         ]
-
         if activePedagogical:
             raise DomainError(
                 code="PEDAGOGICAL_PROCESSING_ACTIVE",
@@ -421,139 +412,23 @@ class MaterialService:
                 httpStatus=409,
             )
 
-        files = self.repository.listFiles(materialId)
-
-        storageKeys = [
-            fileModel.storageKey
-            for fileModel in files
-        ]
-
         try:
-            deletedDocumentGraph = (
-                self.documentRepository.deleteByMaterialId(materialId)
-            )
-
-            pedagogicalArtifacts = [
-                artifact
-                for artifact in self.pedagogicalRepository.listAllByStudent(
-                    studentId
-                )
-                if str(materialId) in (
-                    artifact.sourceMaterialIds or []
-                )
-            ]
-            pedagogicalArtifactIds = [
-                artifact.pedagogicalArtifactId
-                for artifact in pedagogicalArtifacts
-            ]
-
-            visualTasks = [
-                task
-                for task in self.visualTaskRepository.listByStudent(
-                    studentId,
-                    limit=500,
-                )
-                if str(materialId) in (
-                    task.sourceMaterialIds or []
-                )
-            ]
-            deletedVisualTasks = (
-                self.visualTaskRepository.deleteByIds(
-                    [
-                        task.visualTaskId
-                        for task in visualTasks
-                    ]
-                )
-            )
-
-            deletedAttempts = self.attemptRepository.deleteByArtifactIds(
-                pedagogicalArtifactIds
-            )
-            deletedPedagogicalArtifacts = (
-                self.pedagogicalRepository.deleteByIds(
-                    pedagogicalArtifactIds
-                )
-            )
-
-            deletedJobs = self.jobRepository.deleteByMaterialId(
-                materialId
-            )
-
-            deletedFiles = self.repository.deleteFilesByMaterialId(
-                materialId
-            )
-
-            deletedMaterials = self.repository.deleteMaterialById(
-                materialId
-            )
-
-            if deletedMaterials != 1:
-                raise DomainError(
-                    code="MATERIAL_DELETE_NOT_FOUND",
-                    message=(
-                        "O material não pôde ser localizado no momento "
-                        "da exclusão."
-                    ),
-                    httpStatus=409,
-                )
-
+            material.status = "ARCHIVED"
+            material.studyEnabled = False
             self.session.commit()
-
             logger.info(
-                "Material deleted studentId=%s materialId=%s "
-                "documentGraph=%s pedagogical=%s attempts=%s "
-                "jobs=%s files=%s",
-                studentId,
-                materialId,
-                deletedDocumentGraph,
-                deletedPedagogicalArtifacts,
-                deletedAttempts,
-                deletedJobs,
-                deletedFiles,
-            )
-
-        except DomainError:
-            self.session.rollback()
-            raise
-
-        except IntegrityError as error:
-            self.session.rollback()
-
-            logger.exception(
-                "Material delete constraint failure "
+                "Material archived without deleting learning artifacts "
                 "studentId=%s materialId=%s",
                 studentId,
                 materialId,
             )
-
+        except IntegrityError as error:
+            self.session.rollback()
             raise DomainError(
-                code="MATERIAL_DELETE_CONSTRAINT_ERROR",
-                message=(
-                    "O material não pôde ser excluído porque ainda existe "
-                    "uma referência interna vinculada a ele. Nenhum dado foi "
-                    "removido. Use o código de correlação para diagnóstico."
-                ),
+                code="MATERIAL_ARCHIVE_CONSTRAINT_ERROR",
+                message="O material não pôde ser arquivado.",
                 httpStatus=409,
             ) from error
-
-        except Exception:
-            self.session.rollback()
-            raise
-
-        # Physical files are removed only after the database transaction
-        # has committed successfully. If storage cleanup fails, the DB
-        # remains consistent and the orphan file is only an infra cleanup.
-        try:
-            self.storageService.removeMaterialTree(
-                studentId,
-                materialId,
-            )
-        except Exception:
-            logger.exception(
-                "Failed to remove physical material tree "
-                "materialId=%s",
-                materialId,
-            )
 
     def listMaterials(
         self,

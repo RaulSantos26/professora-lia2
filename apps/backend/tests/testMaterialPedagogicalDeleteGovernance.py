@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-def testPermanentMaterialDeleteIncludesArchivedPedagogicalArtifacts():
+def test_material_archive_preserves_pedagogical_artifacts_and_visual_tasks():
     source = (
         Path(__file__).parents[1]
         / "app"
@@ -14,11 +14,13 @@ def testPermanentMaterialDeleteIncludesArchivedPedagogicalArtifacts():
     method = source[start:end]
 
     assert "listAllByStudent(" in method
-    assert "deleteByArtifactIds(" in method
-    assert "deleteByIds(" in method
+    assert "deleteByArtifactIds(" not in method
+    assert "deleteByIds(" not in method
+    assert "deleteByMaterialId(" not in method
+    assert "material.status = \"ARCHIVED\"" in method
 
 
-def testDeleteBlocksActivePedagogicalGeneration():
+def test_archive_blocks_active_pedagogical_generation():
     source = (
         Path(__file__).parents[1]
         / "app"
