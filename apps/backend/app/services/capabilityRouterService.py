@@ -1,3 +1,4 @@
+import os
 from app.contracts.capabilityRoutingContract import (
     CapabilityRoutingDecisionContract,
 )
@@ -37,6 +38,29 @@ class CapabilityRouterService:
             for model in registry.models
             if model.available and supports(model)
         ]
+
+        preferredModelId = os.getenv("LIA2_DEFAULT_TEXT_MODEL")
+
+        if not requestedModelId and preferredModelId:
+            preferred = next(
+                (
+                    model
+                    for model in registry.models
+                    if model.modelId == preferredModelId
+                    and model.available
+                    and supports(model)
+                ),
+                None,
+            )
+            if preferred is not None:
+                return CapabilityRoutingDecisionContract(
+                    capability=required,
+                    requestedModelId=None,
+                    effectiveModelId=preferred.modelId,
+                    provider=preferred.provider,
+                    fallbackUsed=False,
+                    fallbackReason=None,
+                )
 
         if requestedModelId:
             requested = next(

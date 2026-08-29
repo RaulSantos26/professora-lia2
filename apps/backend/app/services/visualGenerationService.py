@@ -13,6 +13,7 @@ class VisualGenerationService:
         instruction: str,
         modelId: str,
         thinkingEnabled: bool,
+        researchReferences: list[dict] | None = None,
     ) -> dict:
         schema = self._schema(visualType)
 
@@ -29,6 +30,9 @@ REGRAS:
 - priorize clareza didática;
 - retorne somente a estrutura pedida;
 - não produza HTML, SVG, JavaScript ou Three.js;
+- descreva personagens, objetos e cenário pelo papel semântico, nunca como
+  formas geométricas genéricas;
+- em ANIMATION_2D, organize uma narrativa em 3 momentos observáveis;
 - posições geométricas serão calculadas por uma Skill Python;
 - referências de evidência devem usar índices 1..N.
 
@@ -40,6 +44,10 @@ PEDIDO DO ALUNO:
 
 EVIDÊNCIAS:
 {evidenceContext}
+
+REFERÊNCIAS VISUAIS CONTROLADAS (somente para enriquecer a representação;
+as evidências do aluno continuam sendo a fonte de verdade):
+{researchReferences or []}
 """.strip()
 
         return self.ollama.chatStructured(
@@ -189,6 +197,14 @@ EVIDÊNCIAS:
                             "properties": {
                                 "objectId": {"type": "string"},
                                 "label": {"type": "string"},
+                                "role": {
+                                    "type": "string",
+                                    "enum": [
+                                        "HERO", "CREATURE", "DEITY",
+                                        "MESSENGER", "ITEM", "SCENERY",
+                                        "TEXT", "CONCEPT"
+                                    ],
+                                },
                                 "shape": {
                                     "type": "string",
                                     "enum": [
@@ -216,6 +232,7 @@ EVIDÊNCIAS:
                             "required": [
                                 "objectId",
                                 "label",
+                                "role",
                                 "shape",
                                 "x",
                                 "y",

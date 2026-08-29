@@ -309,6 +309,10 @@ class VisualLayoutSkill:
                         item.get("label")
                         or f"Objeto {index + 1}"
                     ),
+                    "role": str(
+                        item.get("role")
+                        or "CONCEPT"
+                    ).upper(),
                     "shape": str(
                         item.get("shape")
                         or "CIRCLE"

@@ -16,6 +16,7 @@ from app.services.pedagogicalContextService import PedagogicalContextService
 from app.services.thinkingPolicyService import ThinkingPolicyService
 from app.services.visualGenerationService import VisualGenerationService
 from app.skills.visualLayoutSkill import VisualLayoutSkill
+from app.tools.wikimediaVisualReferenceTool import WikimediaVisualReferenceTool
 
 
 class VisualLearningService:
@@ -29,6 +30,7 @@ class VisualLearningService:
         self.thinking = ThinkingPolicyService()
         self.generator = VisualGenerationService()
         self.layout = VisualLayoutSkill()
+        self.referenceResearch = WikimediaVisualReferenceTool()
 
     def create(
         self,
@@ -94,6 +96,15 @@ class VisualLearningService:
             thinkingMode=request.thinkingMode,
         )
 
+        references = (
+            self.referenceResearch.research(
+                evidenceContext=contextText,
+                instruction=request.instruction or "",
+            )
+            if request.visualType in {"ANIMATION_2D", "SCENE_3D"}
+            else []
+        )
+
         semanticSpec = self._fromArtifact(
             studentId=studentId,
             request=request,
@@ -111,12 +122,15 @@ class VisualLearningService:
                 ),
                 modelId=decision.effectiveModelId,
                 thinkingEnabled=thinkingEnabled,
+                researchReferences=references,
             )
 
         renderer, spec = self._prepare(
             request.visualType,
             semanticSpec,
         )
+        if references:
+            spec = {**spec, "referenceSources": references}
 
         model = VisualTaskModel(
             studentId=studentId,
