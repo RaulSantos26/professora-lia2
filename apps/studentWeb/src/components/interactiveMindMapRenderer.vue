@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  ref
+} from 'vue'
 
 const props = defineProps<{
   spec: Record<string, unknown>
@@ -13,15 +18,32 @@ interface MindNode {
   x: number
   y: number
   level: number
+  width?: number
+  height?: number
 }
 
-const scale = ref(0.9)
+const scale = ref(1)
 const offsetX = ref(0)
 const offsetY = ref(0)
 const dragging = ref(false)
 const lastX = ref(0)
 const lastY = ref(0)
 const selectedNodeId = ref<string | null>(null)
+const expanded = ref(false)
+
+const viewport = computed(() => {
+  const source = (
+    props.spec.viewport
+    && typeof props.spec.viewport === 'object'
+      ? props.spec.viewport as Record<string, unknown>
+      : {}
+  )
+
+  return {
+    width: Number(source.width) || 1200,
+    height: Number(source.height) || 760
+  }
+})
 
 const nodes = computed(() => {
   const source = (
@@ -47,17 +69,16 @@ const nodes = computed(() => {
     ?? source[0]?.nodeId
     ?? ''
   )
-
   const byParent = new Map<string | null, MindNode[]>()
 
   source.forEach(node => {
     const key = node.parentId ?? null
-    const values = byParent.get(key) ?? []
-    values.push(node)
-    byParent.set(key, values)
+    byParent.set(
+      key,
+      [...(byParent.get(key) ?? []), node]
+    )
   })
 
-  const result: MindNode[] = []
   const root = source.find(
     node => node.nodeId === rootId
   ) ?? source[0]
@@ -66,80 +87,38 @@ const nodes = computed(() => {
     return []
   }
 
-  result.push({
+  const result: MindNode[] = [{
     ...root,
     x: 600,
-    y: 90,
+    y: 92,
     level: 0
-  })
-
+  }]
   const branches = byParent.get(root.nodeId) ?? []
 
-  branches.forEach((branch, branchIndex) => {
-    const x = (
-      130
-      + branchIndex
-      * (
-        940
-        / Math.max(branches.length - 1, 1)
-      )
+  branches.forEach((branch, index) => {
+    const x = 160 + index * (
+      880 / Math.max(branches.length - 1, 1)
     )
 
     result.push({
       ...branch,
       x,
-      y: 250,
+      y: 260,
       level: 1
     })
 
     const children = byParent.get(branch.nodeId) ?? []
 
     children.forEach((child, childIndex) => {
-      const offset = (
-        childIndex
-        - (children.length - 1) / 2
-      ) * 150
-
       result.push({
         ...child,
-        x: x + offset,
-        y: 430,
+        x: x + (
+          childIndex - (children.length - 1) / 2
+        ) * 260,
+        y: 450,
         level: 2
       })
-
-      const grandchildren = byParent.get(child.nodeId) ?? []
-
-      grandchildren.forEach((grand, grandIndex) => {
-        result.push({
-          ...grand,
-          x: (
-            x
-            + offset
-            + (
-              grandIndex
-              - (grandchildren.length - 1) / 2
-            ) * 110
-          ),
-          y: 590,
-          level: 3
-        })
-      })
     })
-  })
-
-  const known = new Set(
-    result.map(node => node.nodeId)
-  )
-
-  source.forEach(node => {
-    if (!known.has(node.nodeId)) {
-      result.push({
-        ...node,
-        x: 600,
-        y: 680,
-        level: 4
-      })
-    }
   })
 
   return result
@@ -147,15 +126,23 @@ const nodes = computed(() => {
 
 const edges = computed(
   () => nodes.value
-    .filter(node => node.parentId)
-    .map(node => ({
-      child: node,
-      parent: nodes.value.find(
-        candidate =>
-          candidate.nodeId === node.parentId
-      ) ?? null
+    .map(child => ({
+      child,
+      parent: child.parentId
+        ? nodes.value.find(
+          candidate =>
+            candidate.nodeId === child.parentId
+        ) ?? null
+        : null
     }))
-    .filter(edge => edge.parent)
+    .filter(
+      (
+        edge
+      ): edge is {
+        child: MindNode
+        parent: MindNode
+      } => edge.parent !== null
+    )
 )
 
 const selectedNode = computed(
@@ -164,11 +151,19 @@ const selectedNode = computed(
   ) ?? null
 )
 
+function nodeWidth(node: MindNode) {
+  return Number(node.width) || 200
+}
+
+function nodeHeight(node: MindNode) {
+  return Number(node.height) || 68
+}
+
 function wheel(event: WheelEvent) {
   event.preventDefault()
   const direction = event.deltaY > 0 ? -0.08 : 0.08
   scale.value = Math.min(
-    1.8,
+    2.4,
     Math.max(0.45, scale.value + direction)
   )
 }
@@ -197,29 +192,71 @@ function pointerUp() {
 }
 
 function resetView() {
-  scale.value = 0.9
+  scale.value = 1
   offsetX.value = 0
   offsetY.value = 0
 }
+
+function toggleExpanded() {
+  expanded.value = !expanded.value
+  resetView()
+}
+
+function closeOnEscape(event: KeyboardEvent) {
+  if (event.key === 'Escape' && expanded.value) {
+    expanded.value = false
+    resetView()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', closeOnEscape)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', closeOnEscape)
+})
 </script>
 
 <template>
-  <section class="interactiveMindMap">
+  <section
+    class="interactiveMindMap"
+    :class="{ isExpanded: expanded }"
+  >
     <div class="visualToolbar">
-      <button type="button" @click="scale = Math.min(1.8, scale + 0.1)">
+      <strong class="mindMapControlTitle">
+        {{ expanded ? 'Mapa mental em tela ampliada' : 'Explorar mapa mental' }}
+      </strong>
+      <button
+        type="button"
+        aria-label="Aumentar mapa"
+        @click="scale = Math.min(2.4, scale + 0.1)"
+      >
         +
       </button>
-      <button type="button" @click="scale = Math.max(0.45, scale - 0.1)">
+      <button
+        type="button"
+        aria-label="Diminuir mapa"
+        @click="scale = Math.max(0.45, scale - 0.1)"
+      >
         −
       </button>
       <button type="button" @click="resetView">
-        Centralizar
+        Ajustar à tela
+      </button>
+      <button
+        type="button"
+        class="mindMapExpandButton"
+        @click="toggleExpanded"
+      >
+        {{ expanded ? 'Fechar' : 'Abrir em tela cheia' }}
       </button>
     </div>
 
     <div class="mindMapSvgViewport">
       <svg
-        viewBox="0 0 1200 760"
+        :viewBox="`0 0 ${viewport.width} ${viewport.height}`"
+        preserveAspectRatio="xMidYMid meet"
         role="img"
         aria-label="Mapa mental interativo"
         @wheel="wheel"
@@ -235,11 +272,11 @@ function resetView() {
         >
           <line
             v-for="edge in edges"
-            :key="`${edge.parent?.nodeId}-${edge.child.nodeId}`"
-            :x1="edge.parent?.x"
-            :y1="edge.parent?.y"
+            :key="`${edge.parent.nodeId}-${edge.child.nodeId}`"
+            :x1="edge.parent.x"
+            :y1="edge.parent.y + nodeHeight(edge.parent) / 2"
             :x2="edge.child.x"
-            :y2="edge.child.y"
+            :y2="edge.child.y - nodeHeight(edge.child) / 2"
             class="mindMapConnection"
           />
 
@@ -253,17 +290,17 @@ function resetView() {
             @click.stop="selectedNodeId = node.nodeId"
           >
             <rect
-              x="-100"
-              y="-34"
-              width="200"
-              height="68"
+              :x="-nodeWidth(node) / 2"
+              :y="-nodeHeight(node) / 2"
+              :width="nodeWidth(node)"
+              :height="nodeHeight(node)"
               rx="14"
             />
             <foreignObject
-              x="-92"
-              y="-27"
-              width="184"
-              height="54"
+              :x="-nodeWidth(node) / 2 + 8"
+              :y="-nodeHeight(node) / 2 + 7"
+              :width="nodeWidth(node) - 16"
+              :height="nodeHeight(node) - 14"
             >
               <div class="mindMapNodeLabel">
                 {{ node.label }}

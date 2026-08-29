@@ -10,6 +10,7 @@ import VisualTaskRenderer from './visualTaskRenderer.vue'
 
 import type {
   AgentConversationContract,
+  AgentRunContract,
   AgentThreadContract
 } from '../contracts/agentTutorContract'
 import type {
@@ -41,6 +42,7 @@ const emit = defineEmits<{
     materialIds: string[]
   }]
   archiveThread: []
+  retryLastRun: []
   openPedagogical: [artifactId: string]
 }>()
 
@@ -83,6 +85,41 @@ const studyMaterials = computed(
 
 const activeRun = computed(
   () => props.conversation?.activeRun ?? null
+)
+
+const failedRun = computed(
+  () => {
+    const run = props.conversation?.lastRun ?? null
+
+    return run?.status === 'FAILED'
+      ? run
+      : null
+  }
+)
+
+const failureGuidance = computed(
+  () => {
+    const code = failedRun.value?.errorCode
+
+    if (code === 'AGENT_EVIDENCE_EMPTY') {
+      return (
+        'Ainda não há trechos pesquisáveis para este material. '
+        + 'Em Materiais de estudo, analise e indexe o conteúdo antes de tentar novamente.'
+      )
+    }
+
+    if (code === 'OLLAMA_TIMEOUT') {
+      return (
+        'O modelo demorou mais que o esperado. '
+        + 'Tente novamente; se acontecer de novo, a Lia mostrará o erro para podermos ajustar.'
+      )
+    }
+
+    return (
+      'A Lia não conseguiu terminar esta resposta. '
+      + 'Você pode tentar novamente sem perder sua pergunta.'
+    )
+  }
 )
 
 watch(
@@ -382,6 +419,35 @@ function openPedagogicalAction(
           </article>
 
           <article
+            v-if="failedRun"
+            class="liaMessage liaRunFailure"
+            data-role="ASSISTANT"
+          >
+            <div class="liaMessageBubble">
+              <strong>Não foi possível concluir esta resposta</strong>
+              <p>{{ failureGuidance }}</p>
+              <button
+                type="button"
+                class="secondaryButton"
+                :disabled="busy || Boolean(activeRun)"
+                @click="emit('retryLastRun')"
+              >
+                Tentar novamente
+              </button>
+            </div>
+
+            <details
+              class="liaFailureDetails"
+            >
+              <summary>Detalhes técnicos</summary>
+              <p>
+                {{ failedRun.errorCode ?? 'AGENT_RUN_FAILED' }}
+                · {{ failedRun.errorMessage ?? failedRun.message }}
+              </p>
+            </details>
+          </article>
+
+          <article
             v-if="activeRun"
             class="liaMessage"
             data-role="ASSISTANT"
@@ -415,7 +481,7 @@ function openPedagogicalAction(
             <label>
               Thinking
               <select v-model="thinkingMode">
-                <option value="AUTO">Automático</option>
+                <option value="AUTO">Automático (mais estável)</option>
                 <option value="ON">Sempre usar</option>
                 <option value="OFF">Desativado</option>
               </select>

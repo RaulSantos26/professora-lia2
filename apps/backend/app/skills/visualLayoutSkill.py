@@ -14,152 +14,210 @@ class VisualLayoutSkill:
         self,
         spec: dict,
     ) -> dict:
-        nodes = list(spec.get("nodes") or [])
+        """
+        Arrange a semantic tree according to the width of every subtree.
+        This avoids the fixed-column layout that made labels overlap when
+        a branch had more descendants than its neighbours.
+        """
+        sourceNodes = list(spec.get("nodes") or [])
 
-        if not nodes:
+        if not sourceNodes:
             return spec
 
-        rootId = str(
-            spec.get("rootId")
-            or nodes[0].get("nodeId")
-        )
+        nodeById = {
+            str(node.get("nodeId")): {
+                **node,
+                "nodeId": str(node.get("nodeId")),
+            }
+            for node in sourceNodes
+            if node.get("nodeId") is not None
+        }
 
-        graph = nx.DiGraph()
+        if not nodeById:
+            return spec
 
-        for node in nodes:
-            nodeId = str(node.get("nodeId"))
-            graph.add_node(nodeId)
+        rootId = str(spec.get("rootId") or next(iter(nodeById)))
 
+        if rootId not in nodeById:
+            rootId = next(iter(nodeById))
+
+        children: dict[str, list[str]] = {
+            nodeId: []
+            for nodeId in nodeById
+        }
+
+        for nodeId, node in nodeById.items():
             parentId = node.get("parentId")
 
-            if parentId is not None:
-                graph.add_edge(
-                    str(parentId),
-                    nodeId,
+            if (
+                parentId is not None
+                and str(parentId) in nodeById
+                and str(parentId) != nodeId
+            ):
+                children[str(parentId)].append(nodeId)
+
+        # A malformed parent/cycle must not hide a concept from the map.
+        reachable: set[str] = set()
+
+        def markReachable(nodeId: str) -> None:
+            if nodeId in reachable:
+                return
+            reachable.add(nodeId)
+
+            for childId in children[nodeId]:
+                markReachable(childId)
+
+        markReachable(rootId)
+
+        for nodeId in nodeById:
+            if nodeId not in reachable:
+                children[rootId].append(nodeId)
+
+        levels: dict[str, int] = {}
+
+        def assignLevels(
+            nodeId: str,
+            level: int,
+            ancestry: set[str],
+        ) -> None:
+            if nodeId in ancestry:
+                return
+
+            levels[nodeId] = level
+            nextAncestry = ancestry | {nodeId}
+
+            for childId in children[nodeId]:
+                assignLevels(
+                    childId,
+                    level + 1,
+                    nextAncestry,
                 )
 
-        levels = nx.single_source_shortest_path_length(
-            graph,
-            rootId,
-        )
+        assignLevels(rootId, 0, set())
 
-        byParent: dict[str | None, list[dict]] = {}
-
-        for node in nodes:
-            byParent.setdefault(
-                node.get("parentId"),
-                [],
-            ).append(node)
-
-        positioned = []
-        root = next(
-            (
-                node
-                for node in nodes
-                if str(node.get("nodeId")) == rootId
-            ),
-            nodes[0],
-        )
-        positioned.append(
-            {
-                **root,
-                "x": 600,
-                "y": 90,
-                "level": int(levels.get(str(root.get("nodeId")), 0)),
-            }
-        )
-
-        branches = byParent.get(root.get("nodeId"), [])
-
-        for branchIndex, branch in enumerate(branches):
-            x = (
-                130
-                + branchIndex
-                * (
-                    940
-                    / max(len(branches) - 1, 1)
-                )
+        def nodeSize(node: dict) -> tuple[int, int]:
+            label = str(node.get("label") or "")
+            lineCount = max(
+                1,
+                math.ceil(len(label) / 24),
             )
+            longestLine = min(
+                max(len(label), 12),
+                30,
+            )
+            width = min(
+                320,
+                max(188, 88 + longestLine * 7),
+            )
+            height = max(68, 34 + lineCount * 20)
+            return width, height
+
+        sizes = {
+            nodeId: nodeSize(node)
+            for nodeId, node in nodeById.items()
+        }
+        subtreeWidths: dict[str, int] = {}
+        visiting: set[str] = set()
+
+        def subtreeWidth(nodeId: str) -> int:
+            if nodeId in subtreeWidths:
+                return subtreeWidths[nodeId]
+
+            if nodeId in visiting:
+                return sizes[nodeId][0]
+
+            visiting.add(nodeId)
+            childWidths = [
+                subtreeWidth(childId)
+                for childId in children[nodeId]
+                if childId not in visiting
+            ]
+            visiting.discard(nodeId)
+
+            ownWidth = sizes[nodeId][0]
+            childrenWidth = (
+                sum(childWidths)
+                + 56 * max(len(childWidths) - 1, 0)
+            )
+            subtreeWidths[nodeId] = max(
+                ownWidth,
+                childrenWidth,
+            )
+            return subtreeWidths[nodeId]
+
+        totalWidth = subtreeWidth(rootId)
+        levelHeights: dict[int, int] = {}
+
+        for nodeId, level in levels.items():
+            levelHeights[level] = max(
+                levelHeights.get(level, 0),
+                sizes[nodeId][1],
+            )
+
+        levelCenters: dict[int, float] = {}
+        cursorY = 84.0
+
+        for level in sorted(levelHeights):
+            levelCenters[level] = (
+                cursorY + levelHeights[level] / 2
+            )
+            cursorY += levelHeights[level] + 120
+
+        positioned: list[dict] = []
+
+        def place(
+            nodeId: str,
+            left: float,
+            ancestry: set[str],
+        ) -> None:
+            if nodeId in ancestry:
+                return
+
+            width, height = sizes[nodeId]
+            level = levels.get(nodeId, 0)
             positioned.append(
                 {
-                    **branch,
-                    "x": round(x, 2),
-                    "y": 250,
-                    "level": int(levels.get(str(branch.get("nodeId")), 1)),
+                    **nodeById[nodeId],
+                    "x": round(
+                        left + subtreeWidths[nodeId] / 2,
+                        2,
+                    ),
+                    "y": round(levelCenters[level], 2),
+                    "width": width,
+                    "height": height,
+                    "level": level,
                 }
             )
 
-            children = byParent.get(
-                branch.get("nodeId"),
-                [],
-            )
+            childCursor = left
+            nextAncestry = ancestry | {nodeId}
 
-            for childIndex, child in enumerate(children):
-                offset = (
-                    childIndex
-                    - (len(children) - 1) / 2
-                ) * 150
-
-                positioned.append(
-                    {
-                        **child,
-                        "x": round(x + offset, 2),
-                        "y": 430,
-                        "level": int(levels.get(str(child.get("nodeId")), 2)),
-                    }
+            for childId in children[nodeId]:
+                if childId in nextAncestry:
+                    continue
+                place(
+                    childId,
+                    childCursor,
+                    nextAncestry,
                 )
+                childCursor += subtreeWidths[childId] + 56
 
-                grandchildren = byParent.get(
-                    child.get("nodeId"),
-                    [],
-                )
+        place(rootId, 120.0, set())
 
-                for grandIndex, grand in enumerate(
-                    grandchildren
-                ):
-                    positioned.append(
-                        {
-                            **grand,
-                            "x": round(
-                                x
-                                + offset
-                                + (
-                                    grandIndex
-                                    - (
-                                        len(grandchildren)
-                                        - 1
-                                    )
-                                    / 2
-                                )
-                                * 110,
-                                2,
-                            ),
-                            "y": 590,
-                            "level": int(levels.get(str(grand.get("nodeId")), 3)),
-                        }
-                    )
-
-        known = {
-            str(item.get("nodeId"))
-            for item in positioned
-        }
-
-        for node in nodes:
-            if str(node.get("nodeId")) not in known:
-                positioned.append(
-                    {
-                        **node,
-                        "x": 600,
-                        "y": 680,
-                        "level": 4,
-                    }
-                )
+        viewportWidth = max(
+            960,
+            math.ceil(totalWidth + 240),
+        )
+        viewportHeight = max(
+            560,
+            math.ceil(cursorY - 36),
+        )
 
         return {
             **spec,
             "viewport": {
-                "width": 1200,
-                "height": 760,
+                "width": viewportWidth,
+                "height": viewportHeight,
             },
             "nodes": positioned,
         }

@@ -117,6 +117,28 @@ def getRun(
     )
 
 
+@router.post(
+    "/{studentId}/lia/threads/{threadId}/runs/{runId}/retry",
+    response_model=AgentRunContract,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def retryRun(
+    studentId: UUID,
+    threadId: UUID,
+    runId: UUID,
+    session: Session = Depends(
+        getDatabaseSession
+    ),
+) -> AgentRunContract:
+    return AgentTutorService(
+        session
+    ).retryRun(
+        studentId=studentId,
+        threadId=threadId,
+        runId=runId,
+    )
+
+
 @router.delete(
     "/{studentId}/lia/threads/{threadId}",
     status_code=status.HTTP_204_NO_CONTENT,

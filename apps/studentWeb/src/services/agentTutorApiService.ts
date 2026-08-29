@@ -44,6 +44,27 @@ export class AgentTutorApiService {
     )
   }
 
+  async getRun(
+    studentId: string,
+    threadId: string,
+    runId: string
+  ): Promise<AgentRunContract> {
+    return await this.request<AgentRunContract>(
+      `/api/students/${studentId}/lia/threads/${threadId}/runs/${runId}`
+    )
+  }
+
+  async retryRun(
+    studentId: string,
+    threadId: string,
+    runId: string
+  ): Promise<AgentRunContract> {
+    return await this.request<AgentRunContract>(
+      `/api/students/${studentId}/lia/threads/${threadId}/runs/${runId}/retry`,
+      { method: 'POST' }
+    )
+  }
+
   async sendMessage(
     studentId: string,
     threadId: string,

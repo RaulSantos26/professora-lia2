@@ -31,16 +31,81 @@ def testMindMapLayoutAddsDeterministicCoordinates():
         }
     )
 
-    assert spec["viewport"] == {
-        "width": 1200,
-        "height": 760,
-    }
-    assert spec["nodes"][0]["x"] == 600
-    assert spec["nodes"][0]["y"] == 90
+    assert spec["viewport"]["width"] >= 960
+    assert spec["viewport"]["height"] >= 560
+    assert spec["nodes"][0]["level"] == 0
     assert all(
-        "x" in node and "y" in node
+        {
+            "x",
+            "y",
+            "width",
+            "height",
+        }.issubset(node)
         for node in spec["nodes"]
     )
+    left, right = spec["nodes"][1:]
+    assert abs(left["x"] - right["x"]) >= (
+        (left["width"] + right["width"]) / 2
+    )
+
+
+def testMindMapLayoutPreventsOverlapInDeepBranches():
+    nodes = [
+        {
+            "nodeId": "root",
+            "parentId": None,
+            "label": "O dia em que vi Pégaso nascer",
+        }
+    ]
+    nodes.extend(
+        [
+            {
+                "nodeId": f"page-{index}",
+                "parentId": "root",
+                "label": f"Página {index}",
+            }
+            for index in range(1, 4)
+        ]
+    )
+
+    for pageIndex in range(1, 4):
+        for childIndex in range(1, 4):
+            nodes.append(
+                {
+                    "nodeId": (
+                        f"page-{pageIndex}-item-{childIndex}"
+                    ),
+                    "parentId": f"page-{pageIndex}",
+                    "label": (
+                        "Conceito importante com explicação "
+                        f"{pageIndex}-{childIndex}"
+                    ),
+                }
+            )
+
+    spec = VisualLayoutSkill().layoutMindMap(
+        {
+            "rootId": "root",
+            "nodes": nodes,
+        }
+    )
+    positioned = spec["nodes"]
+
+    for level in {node["level"] for node in positioned}:
+        row = sorted(
+            (
+                node
+                for node in positioned
+                if node["level"] == level
+            ),
+            key=lambda node: node["x"],
+        )
+
+        for left, right in zip(row, row[1:]):
+            assert (
+                right["x"] - left["x"]
+                >= (left["width"] + right["width"]) / 2
+            )
 
 
 def testDiagramLayoutDoesNotAskModelForPixelGeometry():

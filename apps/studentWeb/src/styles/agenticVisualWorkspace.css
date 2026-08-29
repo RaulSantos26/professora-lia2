@@ -212,6 +212,34 @@
   align-items: center;
 }
 
+.liaRunFailure .liaMessageBubble {
+  border-color: #fecaca;
+  background: #fff7f7;
+}
+
+.liaRunFailure button {
+  justify-self: start;
+}
+
+.liaFailureDetails {
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  background: #fffafa;
+  padding: 8px 10px;
+  color: #7f1d1d;
+}
+
+.liaFailureDetails summary {
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.liaFailureDetails p {
+  margin: 7px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .liaCitationDetails {
   border: 1px solid #e5e7eb;
   border-radius: 11px;
@@ -355,11 +383,31 @@
   color: #667085;
 }
 
+.interactiveMindMap {
+  display: grid;
+  gap: 8px;
+}
+
+.interactiveMindMap.isExpanded {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: auto;
+  background: #f8fafc;
+  padding: clamp(12px, 2vw, 28px);
+}
+
 .visualToolbar {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  align-items: center;
   margin-bottom: 7px;
+}
+
+.mindMapControlTitle {
+  margin-right: auto;
 }
 
 .visualToolbar button {
@@ -371,6 +419,12 @@
   font-weight: 750;
 }
 
+.mindMapExpandButton {
+  border-color: #2563eb !important;
+  background: #eff6ff !important;
+  color: #1d4ed8;
+}
+
 .mindMapSvgViewport,
 .diagramVisual {
   width: 100%;
@@ -380,7 +434,25 @@
   background: #fafcff;
 }
 
-.mindMapSvgViewport svg,
+.mindMapSvgViewport {
+  height: clamp(360px, 52vw, 560px);
+}
+
+.interactiveMindMap.isExpanded .mindMapSvgViewport {
+  height: min(78dvh, 900px);
+  min-height: 560px;
+}
+
+.mindMapSvgViewport svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  touch-action: none;
+  user-select: none;
+}
+
 .diagramVisual > svg {
   display: block;
   width: 100%;
@@ -426,6 +498,9 @@
   height: 100%;
   place-items: center;
   overflow: hidden;
+  overflow-wrap: anywhere;
+  padding: 2px;
+  box-sizing: border-box;
   text-align: center;
   font-size: 13px;
   font-weight: 850;
@@ -602,10 +677,14 @@
   }
 
   .mindMapSvgViewport {
-    overflow-x: auto;
+    height: min(64vw, 460px);
+    min-height: 340px;
   }
 
-  .mindMapSvgViewport svg,
+  .interactiveMindMap.isExpanded .mindMapSvgViewport {
+    height: min(78dvh, 760px);
+  }
+
   .diagramVisual > svg {
     min-width: 620px;
     min-height: 430px;
@@ -633,7 +712,14 @@
     flex-basis: 170px;
   }
 
-  .mindMapSvgViewport svg,
+  .mindMapControlTitle {
+    width: 100%;
+  }
+
+  .mindMapSvgViewport {
+    height: 340px;
+  }
+
   .diagramVisual > svg {
     min-width: 560px;
   }

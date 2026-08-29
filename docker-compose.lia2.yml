@@ -7,7 +7,7 @@ services:
     restart: unless-stopped
     environment:
       LIA2_ENVIRONMENT: ${LIA2_ENVIRONMENT:-DEV}
-      LIA2_RELEASE: ${LIA2_RELEASE:-0.7.1-agentic-tutor-visual-learning-fix01}
+      LIA2_RELEASE: ${LIA2_RELEASE:-0.7.2-agentic-tutor-ux-map-fix02}
       LIA2_POSTGRES_HOST: postgres
       LIA2_POSTGRES_PORT: "5432"
       LIA2_POSTGRES_USER: ${LIA2_POSTGRES_USER}

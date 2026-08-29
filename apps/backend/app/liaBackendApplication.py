@@ -34,7 +34,7 @@ from app.observability.correlationMiddleware import CorrelationMiddleware
 
 application = FastAPI(
     title="Professora LIA 2.0 Backend",
-    version="0.7.1-agentic-tutor-visual-learning-fix01",
+    version="0.7.2-agentic-tutor-ux-map-fix02",
 )
 
 application.add_middleware(CorrelationMiddleware)

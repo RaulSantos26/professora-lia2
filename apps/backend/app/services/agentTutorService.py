@@ -99,6 +99,9 @@ class AgentTutorService:
         activeRun = self.repository.activeRun(
             threadId
         )
+        lastRun = self.repository.lastRun(
+            threadId
+        )
 
         return AgentConversationContract(
             thread=self._threadContract(thread),
@@ -109,6 +112,11 @@ class AgentTutorService:
             activeRun=(
                 self._runContract(activeRun)
                 if activeRun
+                else None
+            ),
+            lastRun=(
+                self._runContract(lastRun)
+                if lastRun
                 else None
             ),
         )
@@ -203,6 +211,63 @@ class AgentTutorService:
                 message="Execução da Lia não encontrada.",
                 httpStatus=404,
             )
+
+        return self._runContract(run)
+
+    def retryRun(
+        self,
+        *,
+        studentId: UUID,
+        threadId: UUID,
+        runId: UUID,
+    ) -> AgentRunContract:
+        thread = self._ownedThread(studentId, threadId)
+        previousRun = self.repository.findRun(runId)
+
+        if (
+            previousRun is None
+            or previousRun.agentThreadId != threadId
+        ):
+            raise DomainError(
+                code="AGENT_RUN_NOT_FOUND",
+                message="Execução da Lia não encontrada.",
+                httpStatus=404,
+            )
+
+        if previousRun.status not in ["FAILED", "CANCELLED"]:
+            raise DomainError(
+                code="AGENT_RUN_NOT_RETRYABLE",
+                message=(
+                    "Somente uma execução que não foi concluída "
+                    "pode ser tentada novamente."
+                ),
+                httpStatus=409,
+            )
+
+        if self.repository.activeRun(threadId) is not None:
+            raise DomainError(
+                code="AGENT_RUN_ACTIVE",
+                message=(
+                    "A Lia ainda está respondendo a mensagem anterior."
+                ),
+                httpStatus=409,
+            )
+
+        run = AgentRunModel(
+            agentThreadId=threadId,
+            userMessageId=previousRun.userMessageId,
+            status="QUEUED",
+            stage="QUEUED",
+            progressPercent=5,
+            message="Nova tentativa na fila para a Lia.",
+            requestedTextModelId=previousRun.requestedTextModelId,
+            thinkingMode=previousRun.thinkingMode,
+        )
+        self.repository.createRun(run)
+
+        thread.updatedAt = datetime.now(timezone.utc)
+        self.session.commit()
+        self.session.refresh(run)
 
         return self._runContract(run)
 

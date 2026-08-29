@@ -52,4 +52,5 @@ export interface AgentConversationContract {
   thread: AgentThreadContract
   messages: AgentMessageContract[]
   activeRun: AgentRunContract | null
+  lastRun: AgentRunContract | null
 }

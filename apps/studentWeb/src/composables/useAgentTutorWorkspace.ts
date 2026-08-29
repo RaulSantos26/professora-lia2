@@ -154,19 +154,19 @@ export function useAgentTutorWorkspace(
     busy.value = true
 
     try {
-      await api.sendMessage(
+      const run = await api.sendMessage(
         options.selectedStudent.value.studentId,
         conversation.value.thread.agentThreadId,
         request
       )
 
+      lastActiveRunId = run.agentRunId
       await refreshConversation()
       startPolling()
     } catch (error) {
       options.showError(error)
     } finally {
       busy.value = false
-    lastActiveRunId = null
     }
   }
 
@@ -178,32 +178,76 @@ export function useAgentTutorWorkspace(
       return
     }
 
+    const studentId = options.selectedStudent.value.studentId
+    const threadId = conversation.value.thread.agentThreadId
+    const trackedRunId = lastActiveRunId
+
     conversation.value = await api.getConversation(
-      options.selectedStudent.value.studentId,
-      conversation.value.thread.agentThreadId
+      studentId,
+      threadId
     )
 
     await hydrateVisualTasks()
 
-    const currentActiveRunId = (
-      conversation.value.activeRun?.agentRunId
-      ?? null
-    )
+    if (conversation.value.activeRun) {
+      lastActiveRunId = conversation.value.activeRun.agentRunId
+      return
+    }
 
-    if (
-      lastActiveRunId
-      && currentActiveRunId === null
-    ) {
+    if (trackedRunId) {
+      const terminalRun = await api.getRun(
+        studentId,
+        threadId,
+        trackedRunId
+      )
+
+      if (
+        terminalRun.status === 'QUEUED'
+        || terminalRun.status === 'RUNNING'
+      ) {
+        lastActiveRunId = terminalRun.agentRunId
+        return
+      }
+
+      lastActiveRunId = null
       await Promise.all([
+        loadThreads(),
         options.refreshGuide?.() ?? Promise.resolve(),
         options.refreshWorkspaceSummary?.() ?? Promise.resolve()
       ])
     }
 
-    lastActiveRunId = currentActiveRunId
+    stopPolling()
+  }
 
-    if (!conversation.value.activeRun) {
-      stopPolling()
+  async function retryLastRun() {
+    if (
+      !options.selectedStudent.value
+      || !conversation.value
+      || !conversation.value.lastRun
+      || (
+        conversation.value.lastRun.status !== 'FAILED'
+        && conversation.value.lastRun.status !== 'CANCELLED'
+      )
+    ) {
+      return
+    }
+
+    busy.value = true
+
+    try {
+      const run = await api.retryRun(
+        options.selectedStudent.value.studentId,
+        conversation.value.thread.agentThreadId,
+        conversation.value.lastRun.agentRunId
+      )
+      lastActiveRunId = run.agentRunId
+      await refreshConversation()
+      startPolling()
+    } catch (error) {
+      options.showError(error)
+    } finally {
+      busy.value = false
     }
   }
 
@@ -306,6 +350,7 @@ export function useAgentTutorWorkspace(
     conversation.value = null
     visualTasks.value = {}
     busy.value = false
+    lastActiveRunId = null
   }
 
   return {
@@ -320,6 +365,7 @@ export function useAgentTutorWorkspace(
     selectThread,
     sendMessage,
     refreshConversation,
+    retryLastRun,
     archiveCurrentThread,
     reset
   }

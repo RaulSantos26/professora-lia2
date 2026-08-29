@@ -99,3 +99,4 @@ class AgentConversationContract(BaseModel):
     thread: AgentThreadContract
     messages: list[AgentMessageContract]
     activeRun: AgentRunContract | None
+    lastRun: AgentRunContract | None

@@ -649,6 +649,7 @@ const {
   ensureContextThread,
   selectThread: selectTutorThread,
   sendMessage: sendTutorMessage,
+  retryLastRun: retryTutorRun,
   archiveCurrentThread: archiveTutorThread,
   reset: resetAgentTutorWorkspace
 } = useAgentTutorWorkspace({
@@ -928,6 +929,7 @@ onMounted(async () => {
         :busy="tutorBusy"
         @select-thread="selectTutorThread"
         @send="sendTutorMessage"
+        @retry-last-run="retryTutorRun"
         @archive-thread="archiveTutorThread"
         @open-pedagogical="openPedagogicalFromTutor"
       />

@@ -93,6 +93,20 @@ class AgentTutorRepository:
     ) -> AgentRunModel | None:
         return self.session.get(AgentRunModel, runId)
 
+    def lastRun(
+        self,
+        threadId: UUID,
+    ) -> AgentRunModel | None:
+        statement = (
+            select(AgentRunModel)
+            .where(
+                AgentRunModel.agentThreadId == threadId
+            )
+            .order_by(AgentRunModel.createdAt.desc())
+            .limit(1)
+        )
+        return self.session.scalar(statement)
+
     def activeRun(
         self,
         threadId: UUID,
