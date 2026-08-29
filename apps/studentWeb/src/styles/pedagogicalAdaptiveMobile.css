@@ -1,0 +1,948 @@
+/* ==========================================================
+   LIA2-008 — Pedagogical Engine + Adaptive Learning + Mobile
+   ========================================================== */
+
+.pedagogicalWorkspace {
+  display: grid;
+  gap: 16px;
+}
+
+.pedagogicalGenerationProgress {
+  border: 1px solid #c7d2fe;
+  border-radius: 14px;
+  background: #f8faff;
+  padding: 14px;
+}
+
+.pedagogicalActionGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.pedagogicalActionCard {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-height: 88px;
+  border: 1px solid #dfe5ec;
+  border-radius: 14px;
+  background: #fff;
+  padding: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pedagogicalActionCard[data-selected="true"] {
+  border-color: #2563eb;
+  background: #eff6ff;
+  box-shadow: inset 0 0 0 1px #2563eb;
+}
+
+.pedagogicalActionCard > span:last-child {
+  display: grid;
+  gap: 4px;
+}
+
+.pedagogicalActionCard small {
+  color: #667085;
+  line-height: 1.35;
+}
+
+.pedagogicalActionIcon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 12px;
+  background: #f1f5f9;
+  font-size: 21px;
+}
+
+.pedagogicalComposer {
+  display: grid;
+  gap: 12px;
+  border: 1px solid #dbe3ef;
+  border-radius: 14px;
+  background: #fff;
+  padding: 14px;
+}
+
+.pedagogicalComposer label {
+  display: grid;
+  gap: 6px;
+  font-weight: 750;
+}
+
+.pedagogicalComposer textarea,
+.pedagogicalComposer select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: white;
+  padding: 10px;
+  font: inherit;
+}
+
+.pedagogicalSourceSelector,
+.mobileUploadDetails {
+  border: 1px solid #e2e8f0;
+  border-radius: 11px;
+  background: #fafcff;
+  padding: 10px;
+}
+
+.pedagogicalSourceSelector summary,
+.mobileUploadDetails summary {
+  cursor: pointer;
+  font-weight: 850;
+}
+
+.pedagogicalMaterialChoices {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.materialChoice {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 9px !important;
+  align-items: start;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+  background: white;
+  padding: 9px;
+}
+
+.materialChoice > span {
+  display: grid;
+  gap: 2px;
+}
+
+.materialChoice small {
+  color: #667085;
+}
+
+.pedagogicalSettingsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.primaryStudyAction,
+.primaryMobileSubmit {
+  min-height: 46px;
+  border: 0;
+  border-radius: 11px;
+  background: #172033;
+  color: #fff;
+  padding: 11px 16px;
+  font-weight: 900;
+}
+
+.primaryStudyAction:disabled,
+.primaryMobileSubmit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.pedagogicalWorkspaceGrid {
+  display: grid;
+  grid-template-columns: minmax(230px, 0.32fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.pedagogicalHistory,
+.pedagogicalResult {
+  min-width: 0;
+  border: 1px solid #dfe5ec;
+  border-radius: 14px;
+  background: white;
+  padding: 12px;
+}
+
+.pedagogicalHistory {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.pedagogicalHistoryItem {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.pedagogicalHistoryItem[data-selected="true"] {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.pedagogicalHistoryItem > button:first-child {
+  display: grid;
+  gap: 3px;
+  border: 0;
+  background: transparent;
+  padding: 10px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pedagogicalHistoryItem small {
+  color: #667085;
+}
+
+.historyDeleteButton {
+  border: 0;
+  background: transparent;
+  color: #b42318;
+  padding: 8px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.pedagogicalResult {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+
+.pedagogicalResultHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.pedagogicalResultHeader small {
+  color: #667085;
+}
+
+.artifactStatusBadge {
+  border-radius: 999px;
+  background: #f1f5f9;
+  padding: 5px 8px;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.artifactStatusBadge[data-status="READY"] {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.artifactStatusBadge[data-status="FAILED"] {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.pedagogicalWaiting,
+.pedagogicalEmptyResult {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  min-height: 180px;
+  place-content: center;
+  text-align: center;
+  color: #667085;
+}
+
+.pedagogicalArtifactRenderer {
+  display: grid;
+  gap: 12px;
+}
+
+.pedagogicalIntro {
+  margin: 0;
+  border-left: 4px solid #2563eb;
+  background: #eff6ff;
+  padding: 12px;
+  line-height: 1.6;
+}
+
+.pedagogicalTextSection {
+  border: 1px solid #e5e7eb;
+  border-radius: 11px;
+  padding: 12px;
+}
+
+.pedagogicalTextSection h4,
+.keyPointsCard h4 {
+  margin: 0 0 7px;
+}
+
+.pedagogicalTextSection p {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.65;
+}
+
+.keyPointsCard {
+  border-radius: 11px;
+  background: #fffbeb;
+  padding: 12px;
+}
+
+.keyPointsCard ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.flashcardGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.flashcard {
+  display: grid;
+  min-height: 170px;
+  place-content: center;
+  gap: 10px;
+  border: 1px solid #c7d2fe;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #fff, #f5f7ff);
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.flashcardLabel {
+  color: #4f46e5;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.flashcard small {
+  color: #667085;
+}
+
+.mindMapCanvas {
+  display: grid;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 8px;
+}
+
+.mindMapRoot {
+  justify-self: center;
+  max-width: 420px;
+  border: 2px solid #2563eb;
+  border-radius: 16px;
+  background: #eff6ff;
+  padding: 14px 18px;
+  text-align: center;
+}
+
+.mindMapRoot p,
+.mindMapBranch p,
+.mindMapLeaf p {
+  margin: 5px 0 0;
+  line-height: 1.45;
+}
+
+.mindMapBranches {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(220px, 1fr)
+  );
+  gap: 12px;
+}
+
+.mindMapBranch {
+  border-top: 3px solid #6366f1;
+  border-radius: 12px;
+  background: #fafaff;
+  padding: 10px;
+}
+
+.mindMapBranchHead {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 5px 5px 10px;
+}
+
+.mindMapLeaves {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.mindMapLeaf {
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+  background: #fff;
+  padding: 9px;
+}
+
+.mindMapNestedLeaves {
+  display: grid;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.mindMapNestedLeaves span {
+  display: grid;
+  border-left: 2px solid #c7d2fe;
+  padding-left: 7px;
+  font-size: 11px;
+}
+
+.exerciseRunner {
+  display: grid;
+  gap: 12px;
+}
+
+.attemptScoreCard {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 5px 12px;
+  align-items: center;
+  border-radius: 13px;
+  background: #ecfdf3;
+  padding: 13px;
+}
+
+.attemptScoreCard strong {
+  grid-row: 1 / 3;
+  font-size: 32px;
+}
+
+.attemptScoreCard p {
+  grid-column: 1 / -1;
+  margin: 5px 0 0;
+}
+
+.exerciseQuestion {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 13px;
+}
+
+.exerciseQuestion[data-result="CORRECT"] {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.exerciseQuestion[data-result="WRONG"] {
+  border-color: #fca5a5;
+  background: #fff7f7;
+}
+
+.exerciseQuestionHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #667085;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.exercisePrompt {
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.exerciseOptions {
+  display: grid;
+  gap: 7px;
+}
+
+.exerciseOption {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 9px;
+  align-items: center;
+  min-height: 44px;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+  background: #fff;
+  padding: 8px 10px;
+}
+
+.questionFeedback {
+  margin-top: 10px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 10px;
+}
+
+.questionFeedback p {
+  margin: 5px 0 0;
+}
+
+.pedagogicalEvidenceDetails {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 10px;
+}
+
+.pedagogicalEvidenceDetails summary {
+  cursor: pointer;
+  font-weight: 850;
+}
+
+.pedagogicalEvidenceDetails article {
+  display: grid;
+  gap: 3px;
+  margin-top: 8px;
+  border: 1px solid #edf1f6;
+  border-radius: 9px;
+  background: #fafbfc;
+  padding: 9px;
+}
+
+.pedagogicalEvidenceDetails p {
+  margin: 2px 0 0;
+  white-space: pre-wrap;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+/* Material mobile capture */
+
+.hiddenFileInput {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.mobileUploadPrimaryActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+
+.cameraActionButton,
+.pickerActionButton {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-height: 70px;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  background: #f8fbff;
+  padding: 11px;
+  text-align: left;
+}
+
+.cameraActionButton > span:last-child,
+.pickerActionButton > span:last-child {
+  display: grid;
+  gap: 3px;
+}
+
+.cameraActionButton small,
+.pickerActionButton small {
+  color: #667085;
+}
+
+.mobileSelectedUploads {
+  display: grid;
+  gap: 8px;
+}
+
+.selectedUploadHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mobileUploadPreview {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 11px;
+  background: #fff;
+  padding: 8px;
+}
+
+.mobileUploadPreview img,
+.fileTypePreview {
+  width: 92px;
+  height: 92px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.fileTypePreview {
+  display: grid;
+  place-items: center;
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 900;
+}
+
+.mobileUploadPreviewInfo {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  min-width: 0;
+}
+
+.mobileUploadPreviewInfo strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.previewActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.detailsFormGrid,
+.customAiGrid {
+  display: grid;
+  gap: 9px;
+  margin-top: 10px;
+}
+
+.aiModeSelector {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.aiModeExplanation {
+  color: #667085;
+  font-size: 11px;
+}
+
+.aiPreferenceEditor {
+  grid-template-columns: minmax(180px, 0.8fr) minmax(160px, 0.5fr) minmax(0, 1fr) auto;
+  align-items: end;
+}
+
+.aiPreferenceEditor > div:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.aiPreferenceEditor label {
+  display: grid;
+  gap: 5px;
+}
+
+.aiPreferenceEditor select {
+  min-height: 38px;
+}
+
+.mobileStudentNavigation {
+  display: none;
+}
+
+/* Touch and responsiveness */
+
+@media (max-width: 980px) {
+  .pedagogicalActionGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pedagogicalSettingsGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .pedagogicalWorkspaceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .pedagogicalHistory {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pedagogicalHistory .sectionHeader,
+  .pedagogicalHistory .emptyState {
+    grid-column: 1 / -1;
+  }
+
+  .aiPreferenceEditor {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 767px) {
+  html,
+  body,
+  #app {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  .educationShell.workspaceShell {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 10px calc(88px + env(safe-area-inset-bottom));
+  }
+
+  .workspacePageHeader {
+    padding-inline: 2px;
+  }
+
+  .workspacePageHeader h1 {
+    font-size: clamp(26px, 9vw, 38px);
+    line-height: 1.02;
+  }
+
+  .workspaceNavigation {
+    display: none !important;
+  }
+
+  .workspaceContextBar {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+    overflow: visible !important;
+  }
+
+  .workspaceContextItem {
+    min-width: 0 !important;
+    border: 1px solid #e5e7eb;
+    border-radius: 9px;
+    padding: 7px;
+  }
+
+  .workspaceContextItem strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .learningGuidePrimary {
+    grid-template-columns: 1fr !important;
+  }
+
+  .guideNextButton {
+    width: 100%;
+  }
+
+  .workspacePanel,
+  .workspaceFeaturePanel,
+  .workspacePanelGrid,
+  .materialWorkspaceGrid {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .workspacePanelGrid,
+  .materialWorkspaceGrid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .workspaceFeatureHeader,
+  .sectionHeader,
+  .processingJobHeader,
+  .ragAnswerHeader,
+  .pedagogicalResultHeader {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .mobileStudentNavigation {
+    position: fixed;
+    z-index: 80;
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    overflow: hidden;
+    border: 1px solid #d6deea;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 12px 35px rgba(15, 23, 42, 0.18);
+    backdrop-filter: blur(12px);
+  }
+
+  .mobileStudentNavigation button {
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    min-width: 0;
+    min-height: 58px;
+    border: 0;
+    background: transparent;
+    padding: 7px 3px;
+    color: #475569;
+  }
+
+  .mobileStudentNavigation button[data-active="true"] {
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
+
+  .mobileStudentNavigation button > span {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .mobileStudentNavigation small {
+    overflow: hidden;
+    max-width: 100%;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 9px;
+    font-weight: 800;
+  }
+
+  button,
+  .secondaryButton,
+  .dangerButton,
+  select,
+  input,
+  textarea {
+    min-height: 44px;
+  }
+
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-height: auto;
+    width: 20px;
+    height: 20px;
+  }
+
+  .mobileUploadPrimaryActions,
+  .pedagogicalActionGrid,
+  .pedagogicalSettingsGrid,
+  .flashcardGrid,
+  .pedagogicalHistory,
+  .aiPreferenceEditor,
+  .customAiGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .cameraActionButton,
+  .pickerActionButton {
+    min-height: 76px;
+  }
+
+  .mobileUploadPreview {
+    grid-template-columns: 76px minmax(0, 1fr);
+  }
+
+  .mobileUploadPreview img,
+  .fileTypePreview {
+    width: 76px;
+    height: 76px;
+  }
+
+  .selectedUploadHeader {
+    display: grid;
+  }
+
+  .previewActions {
+    display: grid;
+    grid-template-columns: repeat(
+      auto-fit,
+      minmax(82px, 1fr)
+    );
+  }
+
+  .previewActions button {
+    padding-inline: 5px;
+  }
+
+  .pedagogicalActionCard {
+    min-height: 76px;
+  }
+
+  .pedagogicalComposer,
+  .pedagogicalHistory,
+  .pedagogicalResult {
+    padding: 10px;
+  }
+
+  .flashcard {
+    min-height: 150px;
+  }
+
+  .mindMapCanvas {
+    overflow-x: visible;
+    padding: 0;
+  }
+
+  .mindMapBranches {
+    grid-template-columns: 1fr;
+  }
+
+  .exerciseQuestion {
+    padding: 10px;
+  }
+
+  .exerciseOption {
+    min-height: 50px;
+  }
+
+  .ragQueryForm {
+    grid-template-columns: 1fr !important;
+  }
+
+  .ragQueryForm textarea,
+  .compactCheckbox {
+    grid-column: auto !important;
+  }
+
+  .documentMetrics,
+  .processingModelDetails,
+  .materialItemActions {
+    overflow-x: auto;
+    max-width: 100%;
+    padding-bottom: 3px;
+  }
+
+  .messageCard {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .educationWorkspaceContextBar {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 430px) {
+  .educationShell.workspaceShell {
+    padding-inline: 7px;
+  }
+
+  .workspaceFeaturePanel {
+    border-radius: 12px;
+    padding-inline: 9px;
+  }
+
+  .mobileStudentNavigation small {
+    font-size: 8px;
+  }
+
+  .mobileStudentNavigation button {
+    min-height: 56px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .mobileStudentNavigation {
+    left: auto;
+    right: max(8px, env(safe-area-inset-right));
+    width: 72px;
+    grid-template-columns: 1fr;
+  }
+
+  .educationShell.workspaceShell {
+    padding-bottom: 10px;
+    padding-right: 90px;
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "RagQueryResponse.v1",
+  "type": "object",
+  "required": [
+    "contractName",
+    "answer",
+    "citations",
+    "textModelId",
+    "embeddingModelId",
+    "evidence",
+    "thinkingMode",
+    "thinkingEnabled"
+  ],
+  "properties": {
+    "contractName": {
+      "const": "RagQueryResponse.v1"
+    },
+    "answer": {
+      "type": "string"
+    },
+    "citations": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    },
+    "textModelId": {
+      "type": "string"
+    },
+    "embeddingModelId": {
+      "type": "string"
+    },
+    "evidence": {
+      "type": "array"
+    },
+    "thinkingMode": {
+      "type": "string",
+      "enum": [
+        "AUTO",
+        "ON",
+        "OFF"
+      ]
+    },
+    "thinkingEnabled": {
+      "type": "boolean"
+    }
+  }
+}

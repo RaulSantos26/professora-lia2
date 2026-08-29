@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "AiExecutionPreference.v1",
+  "type": "object",
+  "required": [
+    "contractName",
+    "mode",
+    "thinkingMode"
+  ],
+  "properties": {
+    "contractName": {
+      "const": "AiExecutionPreference.v1"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "AUTO",
+        "FIXED",
+        "CUSTOM"
+      ]
+    },
+    "fixedModelId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "textModelId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "visionModelId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "embeddingModelId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "thinkingMode": {
+      "type": "string",
+      "enum": [
+        "AUTO",
+        "ON",
+        "OFF"
+      ],
+      "default": "AUTO"
+    }
+  }
+}

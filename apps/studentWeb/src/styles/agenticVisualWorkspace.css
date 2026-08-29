@@ -1,0 +1,640 @@
+/* ==========================================================
+   LIA2-009 — Agentic Tutor + Visual Learning Engine
+   ========================================================== */
+
+.liaTutorWorkspace {
+  display: grid;
+  gap: 14px;
+}
+
+.liaTutorHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.liaTutorHeader h2,
+.visualTaskHeader h3 {
+  margin: 0;
+}
+
+.liaTutorHeader p:not(.eyebrow) {
+  max-width: 760px;
+  margin-bottom: 0;
+  color: #667085;
+}
+
+.agentRunBadge {
+  min-width: 64px;
+  border-radius: 999px;
+  background: #eef2ff;
+  padding: 8px 12px;
+  text-align: center;
+  font-weight: 900;
+}
+
+.agentRunProgress {
+  display: grid;
+  gap: 9px;
+  border: 1px solid #c7d2fe;
+  border-radius: 14px;
+  background: #f8faff;
+  padding: 12px;
+}
+
+.agentRunProgress > div:first-child {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 10px;
+  align-items: center;
+}
+
+.agentRunProgress .liaSpinner {
+  grid-row: 1 / 3;
+}
+
+.agentRunProgress small {
+  color: #667085;
+}
+
+.liaTutorLayout {
+  display: grid;
+  grid-template-columns: minmax(190px, 0.28fr) minmax(0, 1fr);
+  min-height: 660px;
+  gap: 12px;
+}
+
+.liaThreadSidebar {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  border: 1px solid #dfe5ec;
+  border-radius: 14px;
+  background: #fff;
+  padding: 10px;
+}
+
+.liaThreadButton {
+  display: grid;
+  gap: 3px;
+  min-height: 58px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  padding: 9px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.liaThreadButton[data-selected="true"] {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.liaThreadButton small {
+  overflow: hidden;
+  color: #667085;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.archiveConversationButton {
+  margin-top: 8px;
+}
+
+.liaConversationColumn {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-width: 0;
+  min-height: 660px;
+  overflow: hidden;
+  border: 1px solid #dfe5ec;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.liaMessageList {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 16px;
+  scroll-behavior: smooth;
+}
+
+.liaConversationEmpty {
+  display: grid;
+  justify-items: center;
+  gap: 9px;
+  max-width: 640px;
+  margin: 60px auto;
+  text-align: center;
+}
+
+.liaConversationEmpty p {
+  margin: 0;
+  color: #667085;
+  line-height: 1.55;
+}
+
+.liaAvatar {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border-radius: 18px;
+  background: #172033;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 950;
+}
+
+.liaPromptSuggestions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.liaPromptSuggestions button {
+  min-height: 52px;
+  border: 1px solid #dbe3ef;
+  border-radius: 11px;
+  background: #fafcff;
+  padding: 9px 12px;
+  font-weight: 750;
+}
+
+.liaMessage {
+  display: grid;
+  gap: 7px;
+  width: min(92%, 780px);
+}
+
+.liaMessage[data-role="USER"] {
+  justify-self: end;
+}
+
+.liaMessage[data-role="ASSISTANT"] {
+  justify-self: start;
+}
+
+.liaMessageBubble {
+  display: grid;
+  gap: 5px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #fff;
+  padding: 11px 13px;
+}
+
+.liaMessage[data-role="USER"] .liaMessageBubble {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.liaMessageBubble strong {
+  font-size: 11px;
+}
+
+.liaMessageBubble p {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.62;
+}
+
+.liaTypingBubble {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+}
+
+.liaCitationDetails {
+  border: 1px solid #e5e7eb;
+  border-radius: 11px;
+  background: #fafbfc;
+  padding: 8px 10px;
+}
+
+.liaCitationDetails summary {
+  cursor: pointer;
+  font-weight: 850;
+}
+
+.liaCitationDetails article {
+  display: grid;
+  gap: 3px;
+  margin-top: 8px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 8px;
+}
+
+.liaCitationDetails p {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.liaActionLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.liaComposer {
+  display: grid;
+  gap: 9px;
+  border-top: 1px solid #e5e7eb;
+  background: #fafcff;
+  padding: 10px;
+}
+
+.liaComposerOptions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.liaComposerOptions label {
+  display: grid;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.liaComposerOptions select {
+  width: 100%;
+  min-height: 38px;
+}
+
+.liaMaterialScope {
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+  background: #fff;
+  padding: 7px 9px;
+}
+
+.liaMaterialScope summary {
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.liaMaterialScope label {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  margin-top: 7px;
+}
+
+.liaMaterialScope label > span {
+  display: grid;
+  gap: 2px;
+}
+
+.liaMaterialScope small {
+  color: #667085;
+}
+
+.liaComposerInput {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+}
+
+.liaComposerInput textarea {
+  width: 100%;
+  min-height: 76px;
+  box-sizing: border-box;
+  resize: vertical;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  background: #fff;
+  padding: 10px;
+  font: inherit;
+}
+
+.liaSendButton {
+  min-width: 92px;
+  min-height: 46px;
+  border: 0;
+  border-radius: 11px;
+  background: #172033;
+  color: #fff;
+  font-weight: 900;
+}
+
+.liaSendButton:disabled {
+  opacity: 0.5;
+}
+
+.visualTaskCard {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #c7d2fe;
+  border-radius: 14px;
+  background: #fff;
+  padding: 10px;
+}
+
+.visualTaskHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.visualTaskHeader small {
+  color: #667085;
+}
+
+.visualToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 7px;
+}
+
+.visualToolbar button {
+  min-height: 36px;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background: #fff;
+  padding: 5px 10px;
+  font-weight: 750;
+}
+
+.mindMapSvgViewport,
+.diagramVisual {
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fafcff;
+}
+
+.mindMapSvgViewport svg,
+.diagramVisual > svg {
+  display: block;
+  width: 100%;
+  min-width: 700px;
+  height: auto;
+  min-height: 480px;
+  touch-action: none;
+  user-select: none;
+}
+
+.mindMapConnection {
+  stroke: #94a3b8;
+  stroke-width: 2;
+}
+
+.mindMapNode rect {
+  fill: #fff;
+  stroke: #cbd5e1;
+  stroke-width: 1.5;
+  cursor: pointer;
+}
+
+.mindMapNode[data-level="0"] rect {
+  fill: #eff6ff;
+  stroke: #2563eb;
+  stroke-width: 2;
+}
+
+.mindMapNode[data-level="1"] rect {
+  fill: #f5f3ff;
+  stroke: #7c3aed;
+}
+
+.mindMapNode[data-selected="true"] rect {
+  stroke: #0f172a;
+  stroke-width: 3;
+}
+
+.mindMapNodeLabel,
+.diagramNodeLabel {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  overflow: hidden;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1.15;
+}
+
+.visualInspector {
+  display: grid;
+  gap: 5px;
+  margin-top: 8px;
+  border-left: 4px solid #2563eb;
+  background: #eff6ff;
+  padding: 10px 12px;
+}
+
+.visualInspector p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.diagramVisual {
+  padding-bottom: 8px;
+}
+
+.diagramEdge {
+  stroke: #64748b;
+  stroke-width: 2;
+}
+
+.diagramVisual marker path {
+  fill: #64748b;
+}
+
+.diagramNode rect {
+  fill: #fff;
+  stroke: #94a3b8;
+  stroke-width: 2;
+  cursor: pointer;
+}
+
+.diagramNode[data-selected="true"] rect {
+  fill: #eff6ff;
+  stroke: #2563eb;
+  stroke-width: 3;
+}
+
+.canvasVisual,
+.canvasAnimationVisual,
+.threeVisual {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.canvasVisual canvas,
+.canvasAnimationVisual canvas {
+  display: block;
+  max-width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.canvasAnimationVisual canvas {
+  width: 100%;
+  height: auto;
+}
+
+.threeVisualHost {
+  width: 100%;
+  min-height: 360px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f8fafc;
+  touch-action: none;
+}
+
+.threeVisualHost canvas {
+  display: block;
+  max-width: 100%;
+}
+
+.threeVisual > small {
+  color: #667085;
+  text-align: center;
+}
+
+/* Existing pedagogical map becomes interactive. */
+.pedagogicalArtifactRenderer .interactiveMindMap {
+  width: 100%;
+}
+
+@media (max-width: 980px) {
+  .liaTutorLayout {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .liaThreadSidebar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .liaThreadSidebar .sectionHeader,
+  .liaThreadSidebar .archiveConversationButton {
+    grid-column: 1 / -1;
+  }
+
+  .liaConversationColumn {
+    min-height: 620px;
+  }
+}
+
+@media (max-width: 767px) {
+  .mobileStudentNavigation {
+    grid-template-columns: repeat(5, 1fr) !important;
+  }
+
+  .liaTutorHeader {
+    display: grid;
+  }
+
+  .liaTutorLayout {
+    display: block;
+  }
+
+  .liaThreadSidebar {
+    display: flex;
+    overflow-x: auto;
+    margin-bottom: 8px;
+    scroll-snap-type: x proximity;
+  }
+
+  .liaThreadSidebar .sectionHeader {
+    display: none !important;
+  }
+
+  .liaThreadButton {
+    flex: 0 0 190px;
+    scroll-snap-align: start;
+  }
+
+  .archiveConversationButton {
+    flex: 0 0 130px;
+  }
+
+  .liaConversationColumn {
+    min-height: calc(100dvh - 210px);
+    border-radius: 12px;
+  }
+
+  .liaMessageList {
+    padding: 10px;
+  }
+
+  .liaMessage {
+    width: 96%;
+  }
+
+  .liaPromptSuggestions {
+    grid-template-columns: 1fr;
+  }
+
+  .liaComposerOptions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .liaComposerInput {
+    grid-template-columns: 1fr;
+  }
+
+  .liaSendButton {
+    width: 100%;
+  }
+
+  .mindMapSvgViewport {
+    overflow-x: auto;
+  }
+
+  .mindMapSvgViewport svg,
+  .diagramVisual > svg {
+    min-width: 620px;
+    min-height: 430px;
+  }
+
+  .visualTaskCard {
+    padding: 8px;
+  }
+
+  .threeVisualHost {
+    min-height: 320px;
+  }
+}
+
+@media (max-width: 430px) {
+  .liaComposerOptions {
+    grid-template-columns: 1fr;
+  }
+
+  .liaMessage {
+    width: 100%;
+  }
+
+  .liaThreadButton {
+    flex-basis: 170px;
+  }
+
+  .mindMapSvgViewport svg,
+  .diagramVisual > svg {
+    min-width: 560px;
+  }
+}

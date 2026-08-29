@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "LearningGuide.v1",
+  "title": "LearningGuide.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractName",
+    "recommendedSection",
+    "headline",
+    "message",
+    "completedSteps",
+    "totalSteps",
+    "steps"
+  ],
+  "properties": {
+    "contractName": {
+      "const": "LearningGuide.v1"
+    },
+    "recommendedSection": {
+      "type": "string"
+    },
+    "headline": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "completedSteps": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "totalSteps": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "steps": {
+      "type": "array"
+    }
+  }
+}

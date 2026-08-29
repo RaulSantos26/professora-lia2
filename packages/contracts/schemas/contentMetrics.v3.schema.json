@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ContentMetrics.v3",
+  "type": "object",
+  "required": [
+    "contractName",
+    "available",
+    "students",
+    "materials",
+    "documentPages",
+    "textBlocks",
+    "visualPendingBlocks",
+    "embeddedChunks",
+    "chunksPendingEmbedding",
+    "processingJobs",
+    "failedJobs",
+    "learningGoals",
+    "studySessions",
+    "pedagogicalArtifacts",
+    "pedagogicalJobsActive",
+    "pedagogicalJobsFailed",
+    "learningAttempts"
+  ],
+  "properties": {
+    "contractName": {
+      "const": "ContentMetrics.v3"
+    },
+    "available": {
+      "type": "boolean"
+    },
+    "pedagogicalArtifacts": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "pedagogicalJobsActive": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "pedagogicalJobsFailed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "learningAttempts": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

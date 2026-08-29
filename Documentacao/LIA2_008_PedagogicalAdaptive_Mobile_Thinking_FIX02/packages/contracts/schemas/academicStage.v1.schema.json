@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "AcademicStage.v1",
+  "title": "AcademicStage.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractName",
+    "academicStageId",
+    "studentId",
+    "educationLevel",
+    "stageLabel",
+    "status",
+    "createdAt",
+    "updatedAt"
+  ],
+  "properties": {
+    "contractName": { "const": "AcademicStage.v1" },
+    "academicStageId": { "type": "string", "format": "uuid" },
+    "studentId": { "type": "string", "format": "uuid" },
+    "educationLevel": { "type": "string", "minLength": 2, "maxLength": 80 },
+    "stageCode": { "type": ["string", "null"], "maxLength": 80 },
+    "stageLabel": { "type": "string", "minLength": 2, "maxLength": 160 },
+    "startedAt": { "type": ["string", "null"], "format": "date" },
+    "endedAt": { "type": ["string", "null"], "format": "date" },
+    "status": { "enum": ["CURRENT", "COMPLETED", "CANCELLED"] },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" }
+  }
+}

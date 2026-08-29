@@ -1,0 +1,324 @@
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #172033;
+  background: #f4f7fb;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+}
+
+.controlShell {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 32px 0 64px;
+}
+
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.eyebrow,
+.serviceName,
+.summaryLabel {
+  margin: 0;
+  font-weight: 800;
+}
+
+.eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+}
+
+h1 {
+  margin: 4px 0 0;
+  font-size: clamp(30px, 5vw, 48px);
+}
+
+h2 {
+  margin-top: 0;
+}
+
+.refreshButton,
+.operationButtons button {
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 10px 14px;
+  background: white;
+}
+
+.refreshButton {
+  cursor: pointer;
+}
+
+.summaryCard,
+.operationsCard,
+.messageCard {
+  background: white;
+  border: 1px solid #dde4ee;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.summaryCard {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.summaryCard > div {
+  display: grid;
+  gap: 6px;
+}
+
+.summaryLabel {
+  font-size: 12px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.serviceGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 14px;
+  margin: 20px 0;
+}
+
+.serviceCard {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  background: white;
+  border: 1px solid #dde4ee;
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.serviceVersion {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.serviceStatus {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+[data-status="ONLINE"] {
+  color: #137a4b;
+}
+
+[data-status="DEGRADED"] {
+  color: #9a6700;
+}
+
+[data-status="OFFLINE"] {
+  color: #b42318;
+}
+
+.errorCard {
+  color: #b42318;
+}
+
+.operationsCard {
+  margin-top: 20px;
+}
+
+.operationButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.operationButtons button:disabled {
+  opacity: 0.45;
+}
+
+@media (max-width: 680px) {
+  .topBar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .summaryCard {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+.adminLoginCard,
+.managedServiceCard {
+  background: white;
+  border: 1px solid #dde4ee;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.adminLoginCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.7fr);
+  gap: 24px;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.adminLoginCard h2 {
+  margin-bottom: 8px;
+}
+
+.loginForm {
+  display: flex;
+  gap: 10px;
+}
+
+.loginForm input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 11px 12px;
+}
+
+.loginForm button,
+.managedServiceActions button {
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: white;
+  cursor: pointer;
+}
+
+.managedServiceGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+  gap: 14px;
+  margin: 20px 0;
+}
+
+.managedServiceCard {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+}
+
+.managedServiceActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.operationsHeader {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.operationMessage {
+  font-weight: 700;
+}
+
+.eventList {
+  display: grid;
+  gap: 10px;
+}
+
+.eventRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  border-top: 1px solid #edf1f6;
+  padding-top: 12px;
+}
+
+.eventRow p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+@media (max-width: 760px) {
+  .adminLoginCard,
+  .operationsHeader {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .loginForm {
+    flex-direction: column;
+  }
+
+  .managedServiceCard {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .managedServiceActions {
+    justify-content: flex-start;
+  }
+}
+
+
+.contentMetricsCard {
+  margin-top: 16px;
+  border: 1px solid #d8e0ea;
+  border-radius: 16px;
+  background: white;
+  padding: 16px;
+}
+
+.contentMetricsHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.contentMetricsHeader h2,
+.contentMetricsHeader p {
+  margin: 0;
+}
+
+.contentMetricsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.contentMetricsGrid div {
+  display: grid;
+  gap: 4px;
+  border: 1px solid #edf1f6;
+  border-radius: 11px;
+  padding: 11px;
+}
+
+.contentMetricsGrid span {
+  color: #687080;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.contentMetricsGrid strong {
+  font-size: 20px;
+}

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "OperationalEvent.v1",
+  "title": "OperationalEvent.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractName",
+    "eventId",
+    "action",
+    "target",
+    "requestedAt",
+    "finishedAt",
+    "status",
+    "affectedServices"
+  ],
+  "properties": {
+    "contractName": { "const": "OperationalEvent.v1" },
+    "eventId": { "type": "string" },
+    "action": { "enum": ["START", "STOP", "RESTART"] },
+    "target": { "type": "string" },
+    "requestedAt": { "type": "string", "format": "date-time" },
+    "finishedAt": { "type": "string", "format": "date-time" },
+    "status": { "enum": ["SUCCESS", "FAILED"] },
+    "affectedServices": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "errorType": { "type": ["string", "null"] }
+  }
+}

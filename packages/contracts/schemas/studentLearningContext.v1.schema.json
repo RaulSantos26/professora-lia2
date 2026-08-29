@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "StudentLearningContext.v1",
+  "title": "StudentLearningContext.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractName",
+    "studentLearningContextId",
+    "studentId",
+    "learningContextId",
+    "status",
+    "enrolledAt",
+    "createdAt",
+    "updatedAt"
+  ],
+  "properties": {
+    "contractName": { "const": "StudentLearningContext.v1" },
+    "studentLearningContextId": { "type": "string", "format": "uuid" },
+    "studentId": { "type": "string", "format": "uuid" },
+    "learningContextId": { "type": "string", "format": "uuid" },
+    "academicStageId": { "type": ["string", "null"], "format": "uuid" },
+    "status": { "enum": ["ACTIVE", "INACTIVE", "COMPLETED"] },
+    "enrolledAt": { "type": "string", "format": "date-time" },
+    "completedAt": { "type": ["string", "null"], "format": "date-time" },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" }
+  }
+}

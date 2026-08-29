@@ -1,0 +1,101 @@
+services:
+  lia2-backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    container_name: lia2-backend
+    restart: unless-stopped
+    environment:
+      LIA2_ENVIRONMENT: ${LIA2_ENVIRONMENT:-DEV}
+      LIA2_RELEASE: ${LIA2_RELEASE:-0.6.3-pedagogical-adaptive-mobile-thinking-fix02}
+      LIA2_POSTGRES_HOST: postgres
+      LIA2_POSTGRES_PORT: "5432"
+      LIA2_POSTGRES_USER: ${LIA2_POSTGRES_USER}
+      LIA2_POSTGRES_PASSWORD: ${LIA2_POSTGRES_PASSWORD}
+      LIA2_POSTGRES_DB: ${LIA2_POSTGRES_DB}
+      LIA2_MATERIAL_STORAGE_PATH: /var/lib/lia2-materials
+      LIA2_OLLAMA_URL: http://ollama:11434
+      LIA2_PROCESSING_WORKER_ENABLED: "true"
+      LIA2_PROCESSING_POLL_SECONDS: "1.0"
+      LIA2_PEDAGOGICAL_WORKER_ENABLED: "true"
+      LIA2_PEDAGOGICAL_POLL_SECONDS: "1.0"
+      LIA2_OLLAMA_CHAT_TIMEOUT_SECONDS: "360"
+      LIA2_OLLAMA_EMBEDDING_TIMEOUT_SECONDS: "180"
+    ports:
+      - "${LIA2_BACKEND_PORT:-8196}:8000"
+    volumes:
+      - lia2_materials:/var/lib/lia2-materials
+    networks:
+      - docker_default
+
+  lia2-ops-agent:
+    build:
+      context: ./apps/opsAgent
+    container_name: lia2-ops-agent
+    restart: unless-stopped
+    environment:
+      LIA2_ENVIRONMENT: ${LIA2_ENVIRONMENT:-DEV}
+      LIA2_RELEASE: ${LIA2_RELEASE:-0.6.3-pedagogical-adaptive-mobile-thinking-fix02}
+      LIA2_OPS_INTERNAL_TOKEN: ${LIA2_OPS_INTERNAL_TOKEN}
+      LIA2_OPS_AUDIT_PATH: /var/lib/lia2-ops-audit/operationalEvents.jsonl
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - lia2_ops_audit:/var/lib/lia2-ops-audit
+    networks:
+      - docker_default
+
+  lia2-control-api:
+    build:
+      context: ./apps/controlApi
+    container_name: lia2-control-api
+    restart: unless-stopped
+    environment:
+      LIA2_ENVIRONMENT: ${LIA2_ENVIRONMENT:-DEV}
+      LIA2_RELEASE: ${LIA2_RELEASE:-0.6.3-pedagogical-adaptive-mobile-thinking-fix02}
+      LIA2_BACKEND_URL: http://lia2-backend:8000
+      LIA2_OLLAMA_URL: http://ollama:11434
+      LIA2_OPS_AGENT_URL: http://lia2-ops-agent:8000
+      LIA2_OPS_INTERNAL_TOKEN: ${LIA2_OPS_INTERNAL_TOKEN}
+      LIA2_ADMIN_TOKEN: ${LIA2_ADMIN_TOKEN}
+      LIA2_POSTGRES_HOST: postgres
+      LIA2_POSTGRES_PORT: "5432"
+      LIA2_POSTGRES_USER: ${LIA2_POSTGRES_USER}
+      LIA2_POSTGRES_PASSWORD: ${LIA2_POSTGRES_PASSWORD}
+      LIA2_POSTGRES_DB: ${LIA2_POSTGRES_DB}
+    depends_on:
+      - lia2-ops-agent
+    ports:
+      - "${LIA2_CONTROL_API_PORT:-8198}:8000"
+    networks:
+      - docker_default
+
+  lia2-student-web:
+    build:
+      context: ./apps/studentWeb
+    container_name: lia2-student-web
+    restart: unless-stopped
+    ports:
+      - "${LIA2_STUDENT_WEB_PORT:-8197}:80"
+    networks:
+      - docker_default
+
+  lia2-control-center:
+    build:
+      context: ./apps/controlCenter
+    container_name: lia2-control-center
+    restart: unless-stopped
+    depends_on:
+      - lia2-control-api
+    ports:
+      - "${LIA2_CONTROL_CENTER_PORT:-8199}:80"
+    networks:
+      - docker_default
+
+networks:
+  docker_default:
+    external: true
+    name: docker_default
+
+volumes:
+  lia2_ops_audit:
+  lia2_materials:

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "StudyScope.v1",
+  "type": "object",
+  "required": [
+    "contractName",
+    "studyScopeId",
+    "learningGoalId",
+    "name",
+    "status",
+    "createdAt",
+    "updatedAt"
+  ],
+  "properties": {
+    "contractName": {
+      "const": "StudyScope.v1"
+    },
+    "studyScopeId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "learningGoalId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "status": {
+      "type": "string"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "AiModelRegistry.v1",
+  "title": "AiModelRegistry.v1",
+  "type": "object",
+  "required": [
+    "contractName",
+    "providerAvailable",
+    "provider",
+    "defaultMode",
+    "models"
+  ],
+  "properties": {
+    "contractName": {
+      "const": "AiModelRegistry.v1"
+    },
+    "providerAvailable": {
+      "type": "boolean"
+    },
+    "provider": {
+      "type": "string"
+    },
+    "defaultMode": {
+      "const": "AUTO"
+    },
+    "models": {
+      "type": "array"
+    },
+    "warning": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

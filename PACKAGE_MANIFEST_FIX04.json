@@ -1,0 +1,20 @@
+{
+  "package": "LIA2-007-FIX04",
+  "name": "RAG Query Timeout",
+  "release": "0.5.1-multimodal-rag-fix04",
+  "migration": null,
+  "currentMigration": "0008",
+  "rootCause": "Student Web nginx timed out while waiting for the backend RAG query response from a local LLM.",
+  "changes": [
+    "proxy_connect_timeout 30s",
+    "proxy_send_timeout 420s",
+    "proxy_read_timeout 420s",
+    "configurable Ollama chat timeout 360s",
+    "configurable Ollama embedding timeout 180s",
+    "structured OLLAMA_TIMEOUT Error.v1"
+  ],
+  "validation": {
+    "focusedTests": "12 passed",
+    "status": "READY_FOR_DEPLOY"
+  }
+}

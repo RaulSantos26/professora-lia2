@@ -1,0 +1,65 @@
+{
+  "package": "LIA2-009-FIX01",
+  "name": "Agentic Tutor + Student Experience + Visual Learning Engine FIX01",
+  "release": "0.7.1-agentic-tutor-visual-learning-fix01",
+  "migration": {
+    "revision": "0010",
+    "downRevision": "0009"
+  },
+  "status": "READY_FOR_DEPLOY",
+  "agent": {
+    "harness": true,
+    "planner": true,
+    "skills": true,
+    "tools": [
+      "EVIDENCE_SEARCH",
+      "PROGRESS_READ",
+      "PEDAGOGICAL_CREATE",
+      "VISUAL_CREATE"
+    ],
+    "guardrails": true,
+    "operationalMemory": true,
+    "toolCallAudit": true,
+    "chainOfThoughtPersisted": false
+  },
+  "visualLearning": {
+    "MIND_MAP": "SVG",
+    "DIAGRAM": "SVG",
+    "CHART": "CANVAS",
+    "ANIMATION_2D": "CANVAS",
+    "SCENE_3D": "THREE",
+    "pythonGraphLayout": "networkx==3.6.1",
+    "three": "0.185.1"
+  },
+  "validation": {
+    "pythonFiles": 300,
+    "pythonSyntaxErrors": 0,
+    "jsonFiles": 44,
+    "jsonErrors": 0,
+    "backendHostSuite": "80 passed",
+    "controlApi": "6 passed",
+    "opsAgent": "2 passed",
+    "coreRuntimeImports": "PASS",
+    "typescriptFiles": 54,
+    "vueFiles": 44,
+    "typescriptVueScriptErrors": 0,
+    "studentWebArchitecture": "PASS",
+    "vueDirectiveStructuralGate": "PASS",
+    "filesOver1000Lines": 0,
+    "authoritativeGate": "bootstrapLia2.sh on homeserver",
+    "backendDockerLikeLayoutSuite": "80 passed",
+    "repositoryArchitecture": "PASS"
+  },
+  "fix01": {
+    "rootCause": "testAgenticTutorArchitecture.py assumed repository directory depth with ROOT.parents[1]. Inside the backend Docker image ROOT resolves to /app, so ROOT.parents[1] raises IndexError.",
+    "runtimeCodeFailure": false,
+    "databaseMigration": "0010",
+    "newMigration": false,
+    "databaseStateAfterFailedDeploy": "Bootstrap stopped during backend pytest before frontend builds and before Alembic; schema remains at 0009.",
+    "correction": [
+      "Migration test resolves both /app/database and repository database layout.",
+      "Repository validator rejects ROOT.parents[...] in backend tests.",
+      "Exact /app Docker-like filesystem simulation executed before packaging."
+    ]
+  }
+}

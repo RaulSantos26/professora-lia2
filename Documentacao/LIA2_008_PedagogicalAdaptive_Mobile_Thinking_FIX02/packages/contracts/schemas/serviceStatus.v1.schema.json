@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ServiceStatus.v1",
+  "title": "ServiceStatus.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractName",
+    "serviceName",
+    "status",
+    "checkedAt"
+  ],
+  "properties": {
+    "contractName": {
+      "const": "ServiceStatus.v1"
+    },
+    "serviceName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": ["ONLINE", "OFFLINE", "DEGRADED"]
+    },
+    "checkedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "version": {
+      "type": ["string", "null"]
+    },
+    "details": {
+      "type": "object"
+    }
+  }
+}

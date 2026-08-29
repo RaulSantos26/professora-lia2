@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "LearningContext.v1",
+  "title": "LearningContext.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractName",
+    "learningContextId",
+    "contextType",
+    "code",
+    "name",
+    "status",
+    "createdAt",
+    "updatedAt"
+  ],
+  "properties": {
+    "contractName": { "const": "LearningContext.v1" },
+    "learningContextId": { "type": "string", "format": "uuid" },
+    "contextType": {
+      "enum": [
+        "REGULAR_EDUCATION",
+        "ENEM",
+        "VESTIBULAR",
+        "PUBLIC_EXAM",
+        "GRADUATION",
+        "POSTGRAD",
+        "FREE_COURSE",
+        "OTHER"
+      ]
+    },
+    "code": { "type": "string", "minLength": 2, "maxLength": 100 },
+    "name": { "type": "string", "minLength": 2, "maxLength": 200 },
+    "description": { "type": ["string", "null"], "maxLength": 1000 },
+    "status": { "enum": ["ACTIVE", "INACTIVE"] },
+    "startsAt": { "type": ["string", "null"], "format": "date" },
+    "endsAt": { "type": ["string", "null"], "format": "date" },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" }
+  }
+}

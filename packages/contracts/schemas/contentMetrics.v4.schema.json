@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ContentMetrics.v4",
+  "type": "object",
+  "required": [
+    "contractName",
+    "available",
+    "agentThreads",
+    "agentRunsActive",
+    "agentRunsFailed",
+    "agentToolCalls",
+    "visualTasks"
+  ],
+  "properties": {
+    "contractName": {
+      "const": "ContentMetrics.v4"
+    },
+    "available": {
+      "type": "boolean"
+    },
+    "agentThreads": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "agentRunsActive": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "agentRunsFailed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "agentToolCalls": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "visualTasks": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "AgentRun.v1",
+  "type": "object",
+  "required": [
+    "contractName",
+    "agentRunId",
+    "agentThreadId",
+    "userMessageId",
+    "status",
+    "stage",
+    "progressPercent",
+    "message",
+    "thinkingMode",
+    "createdAt"
+  ],
+  "properties": {
+    "contractName": {
+      "const": "AgentRun.v1"
+    },
+    "status": {
+      "enum": [
+        "QUEUED",
+        "RUNNING",
+        "READY",
+        "FAILED",
+        "CANCELLED"
+      ]
+    },
+    "progressPercent": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "thinkingMode": {
+      "enum": [
+        "AUTO",
+        "ON",
+        "OFF"
+      ]
+    }
+  }
+}

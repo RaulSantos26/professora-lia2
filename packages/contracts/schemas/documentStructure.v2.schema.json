@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "DocumentStructure.v2",
+  "type": "object",
+  "required": [
+    "contractName",
+    "documentId",
+    "documentVersionId",
+    "extractionStatus",
+    "pageCount",
+    "pages",
+    "evidenceCount",
+    "chunkCount",
+    "embeddedChunkCount",
+    "visualPendingCount"
+  ],
+  "properties": {
+    "contractName": {
+      "const": "DocumentStructure.v2"
+    },
+    "documentId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "documentVersionId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "extractionStatus": {
+      "type": "string"
+    },
+    "pageCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "pages": {
+      "type": "array"
+    },
+    "evidenceCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "chunkCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "embeddedChunkCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "visualPendingCount": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

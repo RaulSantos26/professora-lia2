@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "VisualTask.v1",
+  "type": "object",
+  "required": [
+    "contractName",
+    "visualTaskId",
+    "studentId",
+    "visualType",
+    "status",
+    "title",
+    "renderer",
+    "spec",
+    "evidence",
+    "sourceMaterialIds",
+    "createdAt"
+  ],
+  "properties": {
+    "contractName": {
+      "const": "VisualTask.v1"
+    },
+    "visualType": {
+      "enum": [
+        "MIND_MAP",
+        "DIAGRAM",
+        "CHART",
+        "ANIMATION_2D",
+        "SCENE_3D"
+      ]
+    },
+    "renderer": {
+      "enum": [
+        "SVG",
+        "CANVAS",
+        "THREE"
+      ]
+    },
+    "spec": {
+      "type": "object"
+    },
+    "evidence": {
+      "type": "array"
+    },
+    "sourceMaterialIds": {
+      "type": "array"
+    }
+  }
+}

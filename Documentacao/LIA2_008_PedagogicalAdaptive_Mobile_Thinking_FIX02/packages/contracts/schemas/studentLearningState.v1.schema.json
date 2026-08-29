@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "StudentLearningState.v1",
+  "type": "object",
+  "required": [
+    "contractName",
+    "studentLearningStateId",
+    "studentId",
+    "studentLearningUnitId",
+    "status",
+    "masteryLevel",
+    "confidenceLevel",
+    "studyCount",
+    "createdAt",
+    "updatedAt"
+  ],
+  "properties": {
+    "contractName": {
+      "const": "StudentLearningState.v1"
+    },
+    "studentLearningStateId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "studentId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "studentLearningUnitId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "status": {
+      "type": "string"
+    },
+    "masteryLevel": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "confidenceLevel": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "studyCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "lastStudiedAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "nextReviewAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

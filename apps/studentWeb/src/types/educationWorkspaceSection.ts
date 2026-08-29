@@ -1,0 +1,13 @@
+export type EducationWorkspaceSection =
+  | 'STUDENT'
+  | 'ACADEMIC_STAGE'
+  | 'LEARNING_CONTEXT'
+  | 'SUBJECT'
+  | 'LEARNING_UNIT'
+  | 'MATERIAL'
+  | 'PEDAGOGICAL'
+  | 'LIA_TUTOR'
+  | 'LEARNING_GOAL'
+  | 'STUDY_SCOPE'
+  | 'STUDY_SESSION'
+  | 'LEARNING_PROGRESS'

@@ -1,0 +1,202 @@
+/* ==========================================================
+   LIA2-005 — Learning Workspace
+   ========================================================== */
+
+.workspaceNavigation {
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+}
+
+.workspaceFeaturePanel {
+  display: grid;
+  gap: 18px;
+}
+
+.workspaceFeatureHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.workspaceFeatureHeader h2,
+.workspaceFeatureHeader h3,
+.workspaceFeatureHeader p {
+  margin: 0;
+}
+
+.workspaceFeatureHeader p:not(.eyebrow) {
+  margin-top: 4px;
+  color: #64748b;
+}
+
+.workspaceEmbeddedCard {
+  box-shadow: none;
+}
+
+.workspaceListCard {
+  border: 1px solid #edf1f6;
+  border-radius: 14px;
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.workspaceSelectableRow {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  border: 1px solid #e3e8ef;
+  border-radius: 11px;
+  background: white;
+  padding: 12px;
+  text-align: left;
+}
+
+.workspaceSelectableRow[data-selected="true"] {
+  border-color: #172033;
+  box-shadow: inset 0 0 0 1px #172033;
+}
+
+.workspaceSelectableRow span:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.workspaceSelectableRow small {
+  color: #64748b;
+}
+
+.scopeCandidateSection {
+  border-top: 1px solid #edf1f6;
+  padding-top: 16px;
+}
+
+.scopeCandidateRow,
+.sessionRow,
+.progressRow {
+  display: grid;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid #edf1f6;
+  padding: 12px 0;
+}
+
+.scopeCandidateRow {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.scopeCandidateRow p,
+.sessionRow p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.scopeCandidateRow button,
+.sessionActionBar button,
+.sessionRow button,
+.progressRow button {
+  border: 1px solid #172033;
+  border-radius: 10px;
+  padding: 9px 12px;
+  background: #172033;
+  color: white;
+  font-weight: 800;
+}
+
+.secondaryButton {
+  background: white !important;
+  color: #172033 !important;
+}
+
+.sessionActionBar {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+  padding-bottom: 12px;
+}
+
+.sessionActionBar label {
+  display: grid;
+  gap: 6px;
+  min-width: 220px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.sessionActionBar select,
+.progressRow input,
+.progressRow select {
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  padding: 9px 10px;
+  background: white;
+}
+
+.sessionList {
+  display: grid;
+}
+
+.sessionRow {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.sessionRowActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.progressRow {
+  grid-template-columns:
+    minmax(220px, 2fr)
+    minmax(130px, 1fr)
+    90px
+    90px
+    auto;
+}
+
+.progressRow label {
+  display: grid;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.progressIdentity {
+  display: grid;
+  gap: 4px;
+}
+
+.progressIdentity span,
+.progressIdentity small {
+  color: #64748b;
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .progressRow {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .progressIdentity {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 600px) {
+  .sessionActionBar {
+    display: grid;
+  }
+
+  .progressRow {
+    grid-template-columns: 1fr;
+  }
+
+  .scopeCandidateRow,
+  .sessionRow {
+    grid-template-columns: 1fr;
+  }
+}

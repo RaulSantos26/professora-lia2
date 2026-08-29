@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "AgentMessage.v1",
+  "type": "object",
+  "required": [
+    "contractName",
+    "agentMessageId",
+    "agentThreadId",
+    "role",
+    "content",
+    "citations",
+    "visualTaskIds",
+    "actions",
+    "createdAt"
+  ],
+  "properties": {
+    "contractName": {
+      "const": "AgentMessage.v1"
+    },
+    "role": {
+      "enum": [
+        "USER",
+        "ASSISTANT"
+      ]
+    },
+    "citations": {
+      "type": "array"
+    },
+    "visualTaskIds": {
+      "type": "array"
+    },
+    "actions": {
+      "type": "array"
+    }
+  }
+}

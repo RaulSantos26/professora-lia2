@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "AgentThread.v1",
+  "type": "object",
+  "required": [
+    "contractName",
+    "agentThreadId",
+    "studentId",
+    "title",
+    "status",
+    "memory",
+    "createdAt",
+    "updatedAt",
+    "lastMessageAt"
+  ],
+  "properties": {
+    "contractName": {
+      "const": "AgentThread.v1"
+    },
+    "agentThreadId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "studentId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "status": {
+      "enum": [
+        "ACTIVE",
+        "ARCHIVED"
+      ]
+    },
+    "memory": {
+      "type": "object"
+    }
+  }
+}

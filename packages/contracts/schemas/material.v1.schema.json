@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "Material.v1",
+  "title": "Material.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractName",
+    "materialId",
+    "studentId",
+    "title",
+    "materialType",
+    "sourceType",
+    "status",
+    "createdAt",
+    "updatedAt"
+  ],
+  "properties": {
+    "contractName": {
+      "const": "Material.v1"
+    },
+    "materialId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "studentId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "studentLearningContextId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "studentSubjectId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "studentLearningUnitId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "title": {
+      "type": "string"
+    },
+    "materialType": {
+      "enum": [
+        "PDF",
+        "IMAGE",
+        "TEXT",
+        "DOCUMENT",
+        "OTHER"
+      ]
+    },
+    "sourceType": {
+      "enum": [
+        "UPLOAD",
+        "MANUAL",
+        "LINK"
+      ]
+    },
+    "description": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "status": {
+      "enum": [
+        "UPLOADED",
+        "PROCESSING",
+        "READY",
+        "ERROR",
+        "ARCHIVED"
+      ]
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

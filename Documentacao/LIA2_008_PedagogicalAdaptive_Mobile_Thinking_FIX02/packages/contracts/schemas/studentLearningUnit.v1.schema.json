@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "StudentLearningUnit.v1",
+  "title": "StudentLearningUnit.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractName",
+    "studentLearningUnitId",
+    "studentSubjectId",
+    "unitType",
+    "code",
+    "title",
+    "status",
+    "createdAt",
+    "updatedAt"
+  ],
+  "properties": {
+    "contractName": { "const": "StudentLearningUnit.v1" },
+    "studentLearningUnitId": { "type": "string", "format": "uuid" },
+    "studentSubjectId": { "type": "string", "format": "uuid" },
+    "parentStudentLearningUnitId": { "type": ["string", "null"], "format": "uuid" },
+    "unitType": { "enum": ["LESSON", "MODULE", "CHAPTER", "SECTION"] },
+    "code": { "type": "string", "minLength": 2, "maxLength": 100 },
+    "title": { "type": "string", "minLength": 2, "maxLength": 250 },
+    "description": { "type": ["string", "null"], "maxLength": 1500 },
+    "displayOrder": { "type": ["integer", "null"], "minimum": 0 },
+    "status": { "enum": ["DRAFT", "ACTIVE", "INACTIVE", "ARCHIVED"] },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" }
+  }
+}

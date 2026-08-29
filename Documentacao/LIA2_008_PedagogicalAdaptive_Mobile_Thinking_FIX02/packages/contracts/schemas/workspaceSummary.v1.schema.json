@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "WorkspaceSummary.v1",
+  "title": "WorkspaceSummary.v1",
+  "type": "object",
+  "required": [
+    "contractName",
+    "academicStageCount",
+    "learningContextCount",
+    "subjectCount",
+    "learningUnitCount",
+    "materialCount",
+    "learningGoalCount",
+    "studyScopeCount",
+    "studySessionCount",
+    "learningProgressCount"
+  ],
+  "properties": {
+    "contractName": {
+      "const": "WorkspaceSummary.v1"
+    },
+    "academicStageCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "learningContextCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "subjectCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "learningUnitCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "materialCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "learningGoalCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "studyScopeCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "studySessionCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "learningProgressCount": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

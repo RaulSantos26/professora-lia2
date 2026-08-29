@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "MaterialProcessingJob.v1",
+  "type": "object",
+  "required": [
+    "contractName",
+    "materialProcessingJobId",
+    "materialId",
+    "studentId",
+    "jobType",
+    "status",
+    "stage",
+    "progressPercent",
+    "message",
+    "createdAt"
+  ],
+  "properties": {
+    "contractName": {
+      "const": "MaterialProcessingJob.v1"
+    },
+    "materialProcessingJobId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "materialId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "studentId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "jobType": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    },
+    "stage": {
+      "type": "string"
+    },
+    "progressPercent": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "message": {
+      "type": "string"
+    }
+  }
+}

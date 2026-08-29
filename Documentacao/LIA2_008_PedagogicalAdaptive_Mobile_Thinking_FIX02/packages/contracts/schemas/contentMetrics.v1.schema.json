@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ContentMetrics.v1",
+  "title": "ContentMetrics.v1",
+  "type": "object",
+  "required": [
+    "contractName",
+    "available",
+    "students",
+    "materials",
+    "documentPages",
+    "textBlocks",
+    "visualPendingBlocks",
+    "chunksPendingEmbedding",
+    "learningGoals",
+    "studySessions"
+  ],
+  "properties": {
+    "contractName": {
+      "const": "ContentMetrics.v1"
+    },
+    "available": {
+      "type": "boolean"
+    },
+    "students": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "materials": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "documentPages": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "textBlocks": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "visualPendingBlocks": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "chunksPendingEmbedding": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "learningGoals": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "studySessions": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "errorType": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

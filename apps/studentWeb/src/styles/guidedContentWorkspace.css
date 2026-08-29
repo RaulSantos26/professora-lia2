@@ -1,0 +1,544 @@
+/* ==========================================================
+   LIA2-006 — Guided Learning + Content & Material
+   ========================================================== */
+
+.workspaceNavigation {
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+}
+
+.workspaceNavigationCard[data-recommended="true"] {
+  border-color: #d97706;
+  background: #fff7ed;
+  box-shadow:
+    inset 0 0 0 1px #d97706,
+    0 8px 24px rgba(217, 119, 6, 0.10);
+}
+
+.nextBadge {
+  align-self: start;
+  border-radius: 999px;
+  padding: 5px 8px;
+  background: #d97706;
+  color: white;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.learningGuide {
+  display: grid;
+  gap: 10px;
+  border: 1px solid #f0c98f;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #fffaf0, #ffffff);
+  padding: 14px 16px;
+}
+
+.learningGuidePrimary {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.7fr) minmax(320px, 2fr) auto;
+  gap: 18px;
+  align-items: center;
+}
+
+.learningGuideProgress {
+  display: grid;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #7c4a03;
+}
+
+.learningGuideProgressTrack {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #f5e2c4;
+}
+
+.learningGuideProgressValue {
+  height: 100%;
+  border-radius: inherit;
+  background: #d97706;
+  transition: width 180ms ease;
+}
+
+.learningGuideMessage h2,
+.learningGuideMessage p {
+  margin: 0;
+}
+
+.learningGuideMessage h2 {
+  margin-top: 2px;
+  font-size: 18px;
+}
+
+.learningGuideMessage p:last-child {
+  margin-top: 4px;
+  color: #5f6470;
+  font-size: 13px;
+}
+
+.guideNextButton {
+  border: 1px solid #b45309;
+  border-radius: 10px;
+  background: #d97706;
+  color: white;
+  font-weight: 900;
+  padding: 10px 13px;
+  white-space: nowrap;
+}
+
+.learningGuideDetails {
+  border-top: 1px solid #f3dfbf;
+  padding-top: 8px;
+}
+
+.learningGuideDetails summary {
+  cursor: pointer;
+  color: #7c4a03;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.learningGuideSteps {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.learningGuideStep {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  border: 1px solid #e7e9ee;
+  border-radius: 10px;
+  background: white;
+  padding: 9px 10px;
+  text-align: left;
+}
+
+.learningGuideStep[data-status="NEXT"] {
+  border-color: #d97706;
+  background: #fff7ed;
+}
+
+.learningGuideStep[data-status="COMPLETE"] {
+  border-color: #bbdfc8;
+  background: #f4fbf6;
+}
+
+.learningGuideStep[data-status="BLOCKED"] {
+  opacity: 0.55;
+}
+
+.guideStepIndicator {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: #f0f2f5;
+  font-weight: 900;
+}
+
+.learningGuideStep[data-status="NEXT"] .guideStepIndicator {
+  background: #d97706;
+  color: white;
+}
+
+.learningGuideStep[data-status="COMPLETE"] .guideStepIndicator {
+  background: #15803d;
+  color: white;
+}
+
+.guideStepText {
+  display: grid;
+  gap: 2px;
+}
+
+.guideStepText small {
+  color: #687080;
+  font-weight: 500;
+}
+
+.guideStepStatus {
+  color: #777f8e;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.materialWorkspaceGrid {
+  align-items: start;
+}
+
+.materialList {
+  max-height: 520px;
+  overflow: auto;
+}
+
+.formHint {
+  display: block;
+  color: #687080;
+  line-height: 1.4;
+}
+
+.documentStructure {
+  display: grid;
+  gap: 14px;
+  border-top: 1px solid #edf1f6;
+  padding-top: 16px;
+}
+
+.documentMetrics {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.documentMetrics span {
+  border: 1px solid #dfe5ec;
+  border-radius: 999px;
+  background: #fafbfc;
+  padding: 5px 8px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.documentPages {
+  display: grid;
+  gap: 8px;
+}
+
+.documentPage {
+  border: 1px solid #e3e8ef;
+  border-radius: 11px;
+  background: white;
+  overflow: hidden;
+}
+
+.documentPage summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  padding: 10px 12px;
+  font-weight: 800;
+}
+
+.documentPage summary span:last-child {
+  color: #687080;
+  font-size: 10px;
+}
+
+.documentBlocks {
+  border-top: 1px solid #edf1f6;
+  padding: 10px 12px;
+}
+
+.documentBlock {
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.documentBlock:last-child {
+  border-bottom: 0;
+}
+
+.documentBlockHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11px;
+}
+
+.documentBlockHeader span {
+  color: #687080;
+  font-weight: 800;
+}
+
+.documentBlock p {
+  margin: 8px 0 0;
+  white-space: pre-wrap;
+  color: #394252;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.visualPendingMessage {
+  border-left: 3px solid #d97706;
+  background: #fff7ed;
+  padding: 8px 10px;
+}
+
+.materialFileLink {
+  justify-self: start;
+  border: 1px solid #172033;
+  border-radius: 9px;
+  padding: 8px 11px;
+  color: #172033;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .learningGuidePrimary {
+    grid-template-columns: 1fr;
+  }
+
+  .guideNextButton {
+    justify-self: start;
+  }
+}
+
+
+/* ==========================================================
+   LIA2-006-FIX02 — Material governance / multi-upload
+   ========================================================== */
+
+.selectedFileList {
+  display: grid;
+  gap: 6px;
+}
+
+.selectedFileItem {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid #e5e9ef;
+  border-radius: 9px;
+  background: #fafbfc;
+  padding: 8px 9px;
+}
+
+.selectedFileItem > span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.selectedFileItem strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.selectedFileItem small {
+  color: #687080;
+  font-size: 10px;
+}
+
+.checkboxField {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start;
+  gap: 9px !important;
+  border: 1px solid #e4e8ee;
+  border-radius: 10px;
+  background: #fafbfc;
+  padding: 10px;
+}
+
+.checkboxField input {
+  margin-top: 2px;
+  width: auto !important;
+}
+
+.checkboxField span {
+  display: grid;
+  gap: 2px;
+}
+
+.checkboxField small {
+  color: #687080;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.modelRegistryWarning {
+  margin: -4px 0 0;
+  border-left: 3px solid #d97706;
+  background: #fff7ed;
+  padding: 7px 9px;
+  color: #7c4a03;
+  font-size: 11px;
+}
+
+.materialLibraryItem {
+  display: grid;
+  gap: 8px;
+  border: 1px solid #e3e8ef;
+  border-radius: 11px;
+  background: white;
+  padding: 9px;
+}
+
+.materialLibraryItem[data-selected="true"] {
+  border-color: #172033;
+  box-shadow: inset 0 0 0 1px #172033;
+}
+
+.materialLibrarySelect {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 2px;
+  text-align: left;
+}
+
+.materialLibrarySelect > span:first-child {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.materialLibrarySelect small {
+  color: #687080;
+  overflow-wrap: anywhere;
+}
+
+.materialLibraryBadges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.studyDisabledBadge {
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  padding: 5px 7px;
+  font-size: 9px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.materialItemActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.materialItemActions button,
+.materialItemActions a {
+  font-size: 10px;
+}
+
+.materialActionLink {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.dangerButton {
+  border: 1px solid #b42318 !important;
+  border-radius: 9px;
+  background: #fff !important;
+  color: #b42318 !important;
+  padding: 8px 10px;
+  font-weight: 800;
+}
+
+.materialErrorSummary {
+  display: grid;
+  gap: 2px;
+  border-left: 3px solid #b42318;
+  background: #fff5f5;
+  padding: 7px 9px;
+  color: #7a271a;
+  font-size: 10px;
+}
+
+.storedOnlyNotice {
+  border: 1px solid #cbd5e1;
+  border-radius: 11px;
+  background: #f8fafc;
+  padding: 11px 12px;
+}
+
+.storedOnlyNotice p {
+  margin: 4px 0 0;
+  color: #596273;
+  font-size: 12px;
+}
+
+.materialErrorNotice {
+  border-color: #f1b6b2;
+  background: #fff7f6;
+}
+
+.messageCard {
+  white-space: pre-line;
+}
+
+
+.modelSelectionField {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+}
+
+.modelRefreshButton {
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .modelSelectionField {
+    grid-template-columns: 1fr;
+  }
+
+  .modelRefreshButton {
+    justify-self: start;
+  }
+}
+
+
+.selectedMaterialPreferences {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.8fr) auto;
+  gap: 10px;
+  align-items: end;
+  border: 1px solid #e3e8ef;
+  border-radius: 11px;
+  background: #fafbfc;
+  padding: 11px 12px;
+}
+
+.selectedMaterialPreferences p {
+  margin: 0;
+}
+
+.selectedMaterialPreferences > div {
+  display: grid;
+  gap: 3px;
+}
+
+.selectedMaterialPreferences select {
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  background: white;
+  padding: 9px 10px;
+}
+
+@media (max-width: 800px) {
+  .selectedMaterialPreferences {
+    grid-template-columns: 1fr;
+  }
+
+  .selectedMaterialPreferences button {
+    justify-self: start;
+  }
+}

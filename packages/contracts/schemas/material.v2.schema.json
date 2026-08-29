@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "Material.v2",
+  "title": "Material.v2",
+  "type": "object",
+  "required": [
+    "contractName",
+    "materialId",
+    "studentId",
+    "title",
+    "materialType",
+    "sourceType",
+    "status",
+    "analysisRequested",
+    "studyEnabled",
+    "createdAt",
+    "updatedAt"
+  ],
+  "properties": {
+    "contractName": {
+      "const": "Material.v2"
+    },
+    "materialId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "studentId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "studentLearningContextId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "studentSubjectId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "studentLearningUnitId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "title": {
+      "type": "string"
+    },
+    "materialType": {
+      "type": "string"
+    },
+    "sourceType": {
+      "type": "string"
+    },
+    "description": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "status": {
+      "type": "string"
+    },
+    "analysisRequested": {
+      "type": "boolean"
+    },
+    "studyEnabled": {
+      "type": "boolean"
+    },
+    "requestedModelId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "lastProcessingErrorCode": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "lastProcessingErrorMessage": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

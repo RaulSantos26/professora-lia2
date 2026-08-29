@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "PedagogicalArtifact.v1",
+  "type": "object",
+  "required": [
+    "contractName",
+    "pedagogicalArtifactId",
+    "studentId",
+    "artifactType",
+    "status",
+    "progressPercent",
+    "message",
+    "title",
+    "sourceMaterialIds",
+    "sourceEvidence",
+    "createdAt",
+    "thinkingMode",
+    "effectiveThinkingEnabled"
+  ],
+  "properties": {
+    "contractName": {
+      "const": "PedagogicalArtifact.v1"
+    },
+    "pedagogicalArtifactId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "studentId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "artifactType": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    },
+    "progressPercent": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "message": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "sourceMaterialIds": {
+      "type": "array"
+    },
+    "sourceEvidence": {
+      "type": "array"
+    },
+    "thinkingMode": {
+      "type": "string",
+      "enum": [
+        "AUTO",
+        "ON",
+        "OFF"
+      ]
+    },
+    "effectiveThinkingEnabled": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    }
+  }
+}

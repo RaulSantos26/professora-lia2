@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "Material.v3",
+  "type": "object",
+  "required": [
+    "contractName",
+    "materialId",
+    "studentId",
+    "title",
+    "materialType",
+    "sourceType",
+    "status",
+    "analysisRequested",
+    "studyEnabled",
+    "aiMode",
+    "createdAt",
+    "updatedAt",
+    "thinkingMode"
+  ],
+  "properties": {
+    "contractName": {
+      "const": "Material.v3"
+    },
+    "materialId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "studentId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "aiMode": {
+      "type": "string",
+      "enum": [
+        "AUTO",
+        "FIXED",
+        "CUSTOM"
+      ]
+    },
+    "fixedModelId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "textModelId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "visionModelId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "embeddingModelId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "sourceGroupId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "sourceSequence": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "thinkingMode": {
+      "type": "string",
+      "enum": [
+        "AUTO",
+        "ON",
+        "OFF"
+      ]
+    }
+  }
+}

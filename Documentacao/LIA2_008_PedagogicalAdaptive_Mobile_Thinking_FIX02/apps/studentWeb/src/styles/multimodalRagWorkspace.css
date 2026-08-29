@@ -1,0 +1,373 @@
+/* ==========================================================
+   LIA2-007 — Multimodal Intelligence + RAG
+   ========================================================== */
+
+.materialOperationProgress,
+.materialProcessingQueue,
+.ragWorkspace {
+  border: 1px solid #dfe5ec;
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 14px;
+}
+
+.uploadProgressPanel {
+  border-color: #b8c7dc;
+  background: #f8fbff;
+}
+
+.operationProgressHeader {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.operationProgressHeader > div {
+  display: grid;
+  gap: 2px;
+}
+
+.operationProgressHeader small {
+  color: #687080;
+}
+
+.operationProgressHeader b,
+.processingJobHeader b {
+  font-variant-numeric: tabular-nums;
+}
+
+.operationProgressTrack {
+  height: 11px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e7edf4;
+  margin-top: 10px;
+}
+
+.operationProgressValue {
+  height: 100%;
+  min-width: 2px;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    #1d4ed8,
+    #2563eb
+  );
+  transition: width 280ms ease;
+}
+
+.liaSpinner {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  border: 3px solid #d5deea;
+  border-top-color: #2563eb;
+  border-radius: 999px;
+  animation: liaSpin 0.85s linear infinite;
+}
+
+.smallSpinner {
+  width: 14px;
+  height: 14px;
+  border-width: 2px;
+}
+
+@keyframes liaSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.materialProcessingQueue {
+  display: grid;
+  gap: 10px;
+  border-color: #bfdbfe;
+  background: #f8fbff;
+}
+
+.materialProcessingQueue .sectionHeader {
+  align-items: center;
+}
+
+.materialProcessingQueue .sectionHeader p:last-child {
+  margin: 4px 0 0;
+  color: #667085;
+  font-size: 12px;
+}
+
+.processingLiveBadge {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  background: #eff6ff;
+  padding: 6px 9px;
+  color: #1d4ed8;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.processingJobCard {
+  border: 1px solid #dbe6f4;
+  border-radius: 11px;
+  background: white;
+  padding: 11px;
+}
+
+.processingJobHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.processingJobHeader > div {
+  display: grid;
+  gap: 3px;
+}
+
+.processingJobHeader small {
+  color: #667085;
+}
+
+.processingModelDetails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.processingModelDetails span {
+  border-radius: 999px;
+  background: #f1f5f9;
+  padding: 4px 7px;
+  color: #475569;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.recentProcessingDetails {
+  border: 1px solid #e6e9ee;
+  border-radius: 11px;
+  background: #fafbfc;
+  padding: 9px 11px;
+}
+
+.recentProcessingDetails summary {
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.recentProcessingList {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.recentProcessingItem {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  border-left: 3px solid #94a3b8;
+  background: white;
+  padding: 7px 9px;
+}
+
+.recentProcessingItem[data-status="DONE"] {
+  border-left-color: #15803d;
+}
+
+.recentProcessingItem[data-status="WARNING"] {
+  border-left-color: #d97706;
+}
+
+.recentProcessingItem[data-status="FAILED"] {
+  border-left-color: #b42318;
+}
+
+.recentProcessingItem > span {
+  display: grid;
+  gap: 2px;
+}
+
+.recentProcessingItem small {
+  color: #687080;
+  font-size: 10px;
+}
+
+.processingMaterialBadge {
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  padding: 5px 7px;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.materialItemActions button:disabled,
+.ragQueryForm button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ragWorkspace {
+  display: grid;
+  gap: 14px;
+  border-color: #c7d2fe;
+  background: linear-gradient(
+    135deg,
+    #f8faff,
+    #ffffff
+  );
+}
+
+.ragWorkspace .sectionHeader p:last-child {
+  margin: 5px 0 0;
+  color: #667085;
+  font-size: 12px;
+}
+
+.ragQueryForm {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(180px, 0.7fr);
+  gap: 10px;
+}
+
+.ragQueryForm textarea {
+  grid-column: 1 / -1;
+  resize: vertical;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 10px;
+  font: inherit;
+}
+
+.ragQueryForm select {
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: white;
+  padding: 9px 10px;
+}
+
+.ragQueryForm button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid #172033;
+  border-radius: 10px;
+  background: #172033;
+  color: white;
+  padding: 10px 12px;
+  font-weight: 900;
+}
+
+.compactCheckbox {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.ragAnswerCard {
+  display: grid;
+  gap: 12px;
+  border: 1px solid #c7d2fe;
+  border-radius: 12px;
+  background: white;
+  padding: 13px;
+}
+
+.ragAnswerHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.ragAnswerHeader small {
+  color: #667085;
+  text-align: right;
+}
+
+.ragAnswerText {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+.ragAnswerCard details {
+  border-top: 1px solid #edf1f6;
+  padding-top: 9px;
+}
+
+.ragAnswerCard summary {
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.ragEvidenceList {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.ragEvidenceItem {
+  display: grid;
+  gap: 4px;
+  border: 1px solid #edf1f6;
+  border-radius: 9px;
+  background: #fafbfc;
+  padding: 9px;
+}
+
+.ragEvidenceItem small {
+  color: #667085;
+}
+
+.ragEvidenceItem p {
+  margin: 0;
+  white-space: pre-wrap;
+  color: #344054;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.documentMetrics span:nth-child(4) {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+@media (max-width: 800px) {
+  .ragQueryForm {
+    grid-template-columns: 1fr;
+  }
+
+  .ragQueryForm textarea,
+  .compactCheckbox {
+    grid-column: auto;
+  }
+
+  .ragAnswerHeader {
+    display: grid;
+  }
+
+  .ragAnswerHeader small {
+    text-align: left;
+  }
+}
+
+@media (max-width: 600px) {
+  .operationProgressHeader {
+    grid-template-columns: auto 1fr;
+  }
+
+  .operationProgressHeader > b {
+    grid-column: 2;
+  }
+
+  .processingJobHeader {
+    display: grid;
+  }
+}

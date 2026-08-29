@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "OperationsStatus.v1",
+  "title": "OperationsStatus.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contractName", "services"],
+  "properties": {
+    "contractName": { "const": "OperationsStatus.v1" },
+    "services": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "contractName",
+          "serviceKey",
+          "containerName",
+          "state"
+        ],
+        "properties": {
+          "contractName": { "const": "ManagedServiceStatus.v1" },
+          "serviceKey": { "enum": ["backend", "studentWeb"] },
+          "containerName": { "type": "string" },
+          "state": { "enum": ["RUNNING", "STOPPED", "MISSING", "UNKNOWN"] }
+        }
+      }
+    }
+  }
+}

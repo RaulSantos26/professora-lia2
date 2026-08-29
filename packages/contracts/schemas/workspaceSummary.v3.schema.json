@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "WorkspaceSummary.v3",
+  "type": "object",
+  "required": [
+    "contractName",
+    "academicStageCount",
+    "learningContextCount",
+    "subjectCount",
+    "learningUnitCount",
+    "materialCount",
+    "pedagogicalArtifactCount",
+    "agentThreadCount",
+    "visualTaskCount",
+    "learningGoalCount",
+    "studyScopeCount",
+    "studySessionCount",
+    "learningProgressCount"
+  ],
+  "properties": {
+    "contractName": {
+      "const": "WorkspaceSummary.v3"
+    },
+    "agentThreadCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "visualTaskCount": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

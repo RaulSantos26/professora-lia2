@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "LearningAttempt.v1",
+  "type": "object",
+  "required": [
+    "contractName",
+    "learningAttemptId",
+    "studentId",
+    "pedagogicalArtifactId",
+    "attemptType",
+    "scorePercent",
+    "correctCount",
+    "totalCount",
+    "results",
+    "adaptiveMessage",
+    "updatedUnitIds"
+  ],
+  "properties": {
+    "contractName": {
+      "const": "LearningAttempt.v1"
+    },
+    "scorePercent": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    }
+  }
+}

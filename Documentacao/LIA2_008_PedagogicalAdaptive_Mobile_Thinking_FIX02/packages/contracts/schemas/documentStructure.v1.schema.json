@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "DocumentStructure.v1",
+  "title": "DocumentStructure.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractName",
+    "documentId",
+    "documentVersionId",
+    "extractionStatus",
+    "pageCount",
+    "pages",
+    "evidenceCount",
+    "chunkCount"
+  ],
+  "properties": {
+    "contractName": {
+      "const": "DocumentStructure.v1"
+    },
+    "documentId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "documentVersionId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "extractionStatus": {
+      "type": "string"
+    },
+    "pageCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "pages": {
+      "type": "array"
+    },
+    "evidenceCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "chunkCount": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

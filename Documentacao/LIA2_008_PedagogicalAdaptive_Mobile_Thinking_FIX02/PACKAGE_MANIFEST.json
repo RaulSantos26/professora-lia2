@@ -1,0 +1,109 @@
+{
+  "package": "LIA2-008",
+  "name": "Pedagogical Engine + Adaptive Learning + Mobile + Thinking FIX02",
+  "release": "0.6.3-pedagogical-adaptive-mobile-thinking-fix02",
+  "migration": {
+    "revision": "0009",
+    "downRevision": "0008"
+  },
+  "status": "READY_FOR_DEPLOY",
+  "capabilities": [
+    "Teach grounded in Evidence",
+    "Explain grounded in Evidence",
+    "Summary",
+    "Structured Mind Map",
+    "Flashcards",
+    "Exercises",
+    "Quiz",
+    "Deterministic answer correction",
+    "Adaptive mastery/confidence/review updates",
+    "Asynchronous pedagogical generation",
+    "AUTO/FIXED/CUSTOM AI execution modes",
+    "Strict manual model selection",
+    "Brazilian Portuguese Vision descriptions",
+    "Improved OCR preprocessing",
+    "Mobile camera capture",
+    "Gallery/file picker",
+    "Photo preview and retake",
+    "Multi-photo ordering and persisted sequence",
+    "Responsive touch-first student UI",
+    "Pedagogical Control Center metrics"
+  ],
+  "validation": {
+    "pythonFiles": 267,
+    "pythonSyntaxErrors": 0,
+    "jsonFiles": 38,
+    "jsonErrors": 0,
+    "typescriptFiles": 49,
+    "vueFiles": 37,
+    "typescriptVueScriptErrors": 0,
+    "runtimeCoreImports": "PASS",
+    "backendHostSuite": "63 passed",
+    "controlApi": "6 passed",
+    "opsAgent": "2 passed",
+    "filesOver1000Lines": 0,
+    "authoritativeGate": "bootstrapLia2.sh: production frontend build before migration",
+    "repositoryStudentWebArchitecture": "PASS",
+    "vueConditionalAdjacency": "PASS"
+  },
+  "packaging": {
+    "transientCachesExcludedFromZip": true,
+    "excluded": [
+      "__pycache__",
+      ".pytest_cache",
+      "*.pyc",
+      "*.pyo"
+    ],
+    "createdFrom": "LIA2-007-FIX04"
+  },
+  "thinking": {
+    "mode": [
+      "AUTO",
+      "ON",
+      "OFF"
+    ],
+    "default": "AUTO",
+    "appliesTo": [
+      "VISION",
+      "RAG_TEXT",
+      "TEACH",
+      "EXPLAIN",
+      "SUMMARY",
+      "MIND_MAP",
+      "FLASHCARDS",
+      "EXERCISES",
+      "QUIZ"
+    ],
+    "notAppliedTo": [
+      "OCR",
+      "EMBEDDINGS"
+    ],
+    "reasoningTraceExposed": false,
+    "reasoningTracePersisted": false,
+    "auditFields": [
+      "thinkingMode",
+      "effectiveThinkingEnabled",
+      "visionMeta.thinkingEnabled"
+    ]
+  },
+  "fix01": {
+    "rootCause": "Backend pytest inspected Student Web source files that are not copied into the backend Docker image.",
+    "databaseChanged": false,
+    "migrationChanged": false,
+    "migrationRevision": "0009",
+    "solution": "Move Student Web architecture validation to repository-level validator executed before Docker backend tests.",
+    "guardrail": "Backend tests may not depend on physical Student Web files."
+  },
+  "fix02": {
+    "rootCause": "materialUploadCard.vue had an invalid Vue v-else-if chain after Thinking controls were inserted between the original v-if and v-else-if siblings.",
+    "databaseMigration": "0009",
+    "newMigration": false,
+    "databaseStateAfterFailedDeploy": "0009 already applied successfully before the Student Web build failed.",
+    "templateFix": [
+      "FIXED branch uses independent v-if",
+      "CUSTOM branch uses independent v-if",
+      "material AI preference editor conditional semantics corrected"
+    ],
+    "bootstrapHardening": "Build Student Web and Control Center in production mode before running Alembic migrations."
+  }
+}
