@@ -914,7 +914,6 @@ onMounted(async () => {
           @create="createLearningContext"
         />
         <StudentLearningContextPanel
-          v-if="selectedStudent"
           :available-contexts="learningContexts"
           :assigned-contexts="assignedContexts"
           :current-academic-stage="currentAcademicStage"
