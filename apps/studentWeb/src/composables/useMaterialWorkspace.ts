@@ -43,6 +43,9 @@ export function useMaterialWorkspace(
 
   const materialSubjects = ref<StudentSubjectContract[]>([])
   const materialUnits = ref<StudentLearningUnitContract[]>([])
+  const selectedMaterialContextId = ref<string | null>(null)
+  const selectedMaterialSubjectId = ref<string | null>(null)
+  const selectedMaterialUnitId = ref<string | null>(null)
 
   const materialBusy = ref(false)
   const materialFormVersion = ref(0)
@@ -112,14 +115,47 @@ export function useMaterialWorkspace(
     selectedMaterialStructure.value = null
     materialSubjects.value = []
     materialUnits.value = []
+    selectedMaterialContextId.value = null
+    selectedMaterialSubjectId.value = null
+    selectedMaterialUnitId.value = null
     processingJobs.value = []
     uploadProgress.value = null
     ragResponse.value = null
   }
 
+  function clearSelectionOutsideScope() {
+    if (!selectedMaterial.value) {
+      return
+    }
+
+    const isInScope = (
+      !selectedMaterialUnitId.value
+      || selectedMaterial.value.studentLearningUnitId
+        === selectedMaterialUnitId.value
+    ) && (
+      !selectedMaterialSubjectId.value
+      || selectedMaterial.value.studentSubjectId
+        === selectedMaterialSubjectId.value
+    ) && (
+      !selectedMaterialContextId.value
+      || selectedMaterial.value.studentLearningContextId
+        === selectedMaterialContextId.value
+    )
+
+    if (!isInScope) {
+      selectedMaterial.value = null
+      selectedMaterialStructure.value = null
+      ragResponse.value = null
+    }
+  }
+
   async function selectMaterialContext(contextId: string) {
+    selectedMaterialContextId.value = contextId || null
+    selectedMaterialSubjectId.value = null
+    selectedMaterialUnitId.value = null
     materialSubjects.value = []
     materialUnits.value = []
+    clearSelectionOutsideScope()
 
     if (!contextId) {
       return
@@ -130,7 +166,10 @@ export function useMaterialWorkspace(
   }
 
   async function selectMaterialSubject(subjectId: string) {
+    selectedMaterialSubjectId.value = subjectId || null
+    selectedMaterialUnitId.value = null
     materialUnits.value = []
+    clearSelectionOutsideScope()
 
     if (!subjectId) {
       return
@@ -138,6 +177,11 @@ export function useMaterialWorkspace(
 
     materialUnits.value =
       await studentContentApiService.listLearningUnits(subjectId)
+  }
+
+  function selectMaterialUnit(unitId: string) {
+    selectedMaterialUnitId.value = unitId || null
+    clearSelectionOutsideScope()
   }
 
   async function uploadMaterials(
@@ -582,6 +626,9 @@ export function useMaterialWorkspace(
     selectedMaterialStructure,
     materialSubjects,
     materialUnits,
+    selectedMaterialContextId,
+    selectedMaterialSubjectId,
+    selectedMaterialUnitId,
     materialBusy,
     materialFormVersion,
     uploadProgress,
@@ -594,6 +641,7 @@ export function useMaterialWorkspace(
     resetMaterialWorkspace,
     selectMaterialContext,
     selectMaterialSubject,
+    selectMaterialUnit,
     uploadMaterials,
     selectMaterial,
     analyzeMaterial,

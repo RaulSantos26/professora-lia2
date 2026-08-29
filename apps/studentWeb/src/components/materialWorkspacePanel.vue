@@ -24,6 +24,9 @@ const props = defineProps<{
   contexts: StudentLearningContextViewContract[]
   subjects: StudentSubjectContract[]
   units: StudentLearningUnitContract[]
+  selectedContextId: string | null
+  selectedSubjectId: string | null
+  selectedUnitId: string | null
   materials: MaterialContract[]
   selectedMaterial: MaterialContract | null
   structure: DocumentStructureContract | null
@@ -39,6 +42,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   selectContext: [contextId: string]
   selectSubject: [subjectId: string]
+  selectUnit: [unitId: string]
   uploadBatch: [request: MaterialBatchUploadRequest]
   selectMaterial: [material: MaterialContract]
   analyze: [material: MaterialContract]
@@ -69,6 +73,53 @@ const ragQuery = ref('')
 const ragModelId = ref('')
 const ragSelectedOnly = ref(false)
 const ragThinkingMode = ref<ThinkingMode>('AUTO')
+
+const visibleMaterials = computed(
+  () => props.materials.filter(material => {
+    if (
+      props.selectedUnitId
+      && material.studentLearningUnitId !== props.selectedUnitId
+    ) {
+      return false
+    }
+
+    if (
+      props.selectedSubjectId
+      && material.studentSubjectId !== props.selectedSubjectId
+    ) {
+      return false
+    }
+
+    if (
+      props.selectedContextId
+      && material.studentLearningContextId !== props.selectedContextId
+    ) {
+      return false
+    }
+
+    return true
+  })
+)
+
+const scopeLabel = computed(() => {
+  if (props.selectedUnitId) {
+    return props.units.find(
+      unit =>
+        unit.studentLearningUnitId === props.selectedUnitId
+    )?.title ?? 'Lição selecionada'
+  }
+
+  if (props.selectedSubjectId) {
+    return props.subjects.find(
+      subject =>
+        subject.studentSubjectId === props.selectedSubjectId
+    )?.name ?? 'Matéria selecionada'
+  }
+
+  return props.selectedContextId
+    ? 'Contexto selecionado'
+    : 'Todos os materiais'
+})
 
 const activeJobs = computed(
   () => props.processingJobs.filter(
@@ -208,7 +259,9 @@ function jobStatusClass(job: MaterialProcessingJobContract): string {
         </p>
       </div>
 
-      <span class="countBadge">{{ materials.length }}</span>
+      <span class="countBadge">
+        {{ visibleMaterials.length }}/{{ materials.length }}
+      </span>
     </div>
 
     <section
@@ -329,24 +382,34 @@ function jobStatusClass(job: MaterialProcessingJobContract): string {
         :contexts="contexts"
         :subjects="subjects"
         :units="units"
+        :selected-context-id="selectedContextId"
+        :selected-subject-id="selectedSubjectId"
+        :selected-unit-id="selectedUnitId"
         :model-registry="modelRegistry"
         :busy="busy"
         @select-context="emit('selectContext', $event)"
         @select-subject="emit('selectSubject', $event)"
+        @select-unit="emit('selectUnit', $event)"
         @upload-batch="emit('uploadBatch', $event)"
         @refresh-models="emit('refreshModels')"
       />
 
       <div class="workspaceListCard materialList">
+        <div class="materialLessonHeader">
+          <span>Materiais da lição</span>
+          <strong>{{ scopeLabel }}</strong>
+        </div>
+
         <p
-          v-if="materials.length === 0"
+          v-if="visibleMaterials.length === 0"
           class="emptyState"
         >
-          Nenhum material enviado para este aluno.
+          Nenhum material nesta lição. As fotos de outras lições continuam
+          guardadas e não serão usadas aqui.
         </p>
 
         <article
-          v-for="material in materials"
+          v-for="material in visibleMaterials"
           :key="material.materialId"
           class="materialLibraryItem"
           :data-selected="

@@ -28,6 +28,9 @@ const props = defineProps<{
   contexts: StudentLearningContextViewContract[]
   subjects: StudentSubjectContract[]
   units: StudentLearningUnitContract[]
+  selectedContextId: string | null
+  selectedSubjectId: string | null
+  selectedUnitId: string | null
   modelRegistry: AiModelRegistryContract | null
   busy: boolean
 }>()
@@ -35,6 +38,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   selectContext: [contextId: string]
   selectSubject: [subjectId: string]
+  selectUnit: [unitId: string]
   uploadBatch: [request: MaterialBatchUploadRequest]
   refreshModels: []
 }>()
@@ -52,9 +56,9 @@ const selectedUploads = ref<SelectedUpload[]>([])
 const replaceCameraIndex = ref<number | null>(null)
 const title = ref('')
 const description = ref('')
-const contextId = ref('')
-const subjectId = ref('')
-const unitId = ref('')
+const contextId = ref(props.selectedContextId ?? '')
+const subjectId = ref(props.selectedSubjectId ?? '')
+const unitId = ref(props.selectedUnitId ?? '')
 const analysisRequested = ref(true)
 const studyEnabled = ref(true)
 
@@ -153,6 +157,33 @@ const canSubmit = computed(() => {
   return true
 })
 
+watch(
+  () => props.selectedContextId,
+  value => {
+    if ((value ?? '') !== contextId.value) {
+      contextId.value = value ?? ''
+    }
+  }
+)
+
+watch(
+  () => props.selectedSubjectId,
+  value => {
+    if ((value ?? '') !== subjectId.value) {
+      subjectId.value = value ?? ''
+    }
+  }
+)
+
+watch(
+  () => props.selectedUnitId,
+  value => {
+    if ((value ?? '') !== unitId.value) {
+      unitId.value = value ?? ''
+    }
+  }
+)
+
 watch(contextId, () => {
   subjectId.value = ''
   unitId.value = ''
@@ -162,6 +193,10 @@ watch(contextId, () => {
 watch(subjectId, () => {
   unitId.value = ''
   emit('selectSubject', subjectId.value)
+})
+
+watch(unitId, () => {
+  emit('selectUnit', unitId.value)
 })
 
 watch(aiMode, mode => {

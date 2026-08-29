@@ -724,3 +724,120 @@
     min-width: 560px;
   }
 }
+
+/* Visual mind-map treatment inspired by Buzan: central topic, colour branches and cues. */
+.buzanMindMap .mindMapSvgViewport {
+  background:
+    radial-gradient(circle at center, #fffef4 0, #fff 42%, #f8fbff 100%);
+}
+
+.mindMapToolbarTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-right: auto;
+  font-weight: 900;
+}
+
+.mindMapHint {
+  margin: -2px 0 2px;
+  color: #526174;
+  font-size: 13px;
+}
+
+.buzanConnection {
+  fill: none;
+  stroke-width: 7;
+  stroke-linecap: round;
+  opacity: 0.76;
+}
+
+.buzanNode {
+  cursor: pointer;
+}
+
+.buzanNode rect {
+  fill: #fff;
+  stroke: var(--branch-color);
+  stroke-width: 3;
+}
+
+.buzanNode[data-root="true"] rect {
+  fill: #172033;
+  stroke: #fbbf24;
+  stroke-width: 4;
+}
+
+.buzanNode[data-selected="true"] rect {
+  stroke: #0f172a;
+  stroke-width: 5;
+}
+
+.buzanNodeContent {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.buzanNode[data-root="true"] .mindMapNodeLabel {
+  color: #fff;
+}
+
+.buzanNodeIcon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--branch-color) 18%, white);
+  font-size: 21px;
+}
+
+.buzanNode[data-root="true"] .buzanNodeIcon {
+  background: #fff3c4;
+}
+
+.mindMapExplanation {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  border: 1px solid #cbd5e1;
+  border-left: 6px solid #f59e0b;
+  border-radius: 14px;
+  background: #fffdf3;
+  padding: 13px 15px;
+}
+
+.mindMapExplanationIcon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff3c4;
+  font-size: 25px;
+}
+
+.mindMapExplanation .eyebrow {
+  margin: 0 0 3px;
+}
+
+.mindMapExplanation p:last-child {
+  margin: 5px 0 0;
+  line-height: 1.5;
+}
+
+@media (max-width: 767px) {
+  .mindMapToolbarTitle {
+    width: 100%;
+  }
+
+  .mindMapHint {
+    font-size: 12px;
+  }
+}

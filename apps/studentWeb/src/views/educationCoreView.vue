@@ -546,6 +546,9 @@ const {
   selectedMaterialStructure,
   materialSubjects,
   materialUnits,
+  selectedMaterialContextId,
+  selectedMaterialSubjectId,
+  selectedMaterialUnitId,
   materialBusy,
   materialFormVersion,
   uploadProgress,
@@ -557,6 +560,7 @@ const {
   resetMaterialWorkspace,
   selectMaterialContext,
   selectMaterialSubject,
+  selectMaterialUnit,
   uploadMaterials,
   selectMaterial,
   analyzeMaterial,
@@ -876,6 +880,9 @@ onMounted(async () => {
         :contexts="assignedContexts"
         :subjects="materialSubjects"
         :units="materialUnits"
+        :selected-context-id="selectedMaterialContextId"
+        :selected-subject-id="selectedMaterialSubjectId"
+        :selected-unit-id="selectedMaterialUnitId"
         :materials="materials"
         :selected-material="selectedMaterial"
         :structure="selectedMaterialStructure"
@@ -888,6 +895,7 @@ onMounted(async () => {
         :is-material-processing="isMaterialProcessing"
         @select-context="selectMaterialContext"
         @select-subject="selectMaterialSubject"
+        @select-unit="selectMaterialUnit"
         @upload-batch="uploadMaterials"
         @select-material="selectMaterial"
         @analyze="analyzeMaterial"
