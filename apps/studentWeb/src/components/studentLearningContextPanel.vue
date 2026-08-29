@@ -5,7 +5,7 @@ import type {
   StudentLearningContextViewContract
 } from '../contracts/studentLearningContextContract'
 
-defineProps<{
+const props = defineProps<{
   availableContexts: LearningContextContract[]
   assignedContexts: StudentLearningContextViewContract[]
   currentAcademicStage: AcademicStageContract | null
