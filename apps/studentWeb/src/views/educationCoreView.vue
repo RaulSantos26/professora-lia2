@@ -582,6 +582,36 @@ const {
     errorMessage.value = message
   }
 })
+const materialsForSelectedLesson = computed(
+  () => materials.value.filter(material => {
+    if (
+      selectedMaterialUnitId.value
+      && material.studentLearningUnitId
+        !== selectedMaterialUnitId.value
+    ) {
+      return false
+    }
+
+    if (
+      selectedMaterialSubjectId.value
+      && material.studentSubjectId
+        !== selectedMaterialSubjectId.value
+    ) {
+      return false
+    }
+
+    if (
+      selectedMaterialContextId.value
+      && material.studentLearningContextId
+        !== selectedMaterialContextId.value
+    ) {
+      return false
+    }
+
+    return true
+  })
+)
+
 const {
   artifacts: pedagogicalArtifacts,
   selectedArtifact: selectedPedagogicalArtifact,
@@ -911,7 +941,7 @@ onMounted(async () => {
           activeSection === 'PEDAGOGICAL'
           && selectedStudent
         "
-        :materials="materials"
+        :materials="materialsForSelectedLesson"
         :selected-material="selectedMaterial"
         :model-registry="aiModelRegistry"
         :artifacts="pedagogicalArtifacts"
@@ -931,7 +961,7 @@ onMounted(async () => {
         :threads="tutorThreads"
         :conversation="tutorConversation"
         :visual-tasks="tutorVisualTasks"
-        :materials="materials"
+        :materials="materialsForSelectedLesson"
         :selected-material="selectedMaterial"
         :model-registry="aiModelRegistry"
         :busy="tutorBusy"
