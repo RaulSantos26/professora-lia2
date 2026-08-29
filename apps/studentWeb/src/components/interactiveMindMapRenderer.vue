@@ -31,20 +31,6 @@ const lastY = ref(0)
 const selectedNodeId = ref<string | null>(null)
 const expanded = ref(false)
 
-const viewport = computed(() => {
-  const source = (
-    props.spec.viewport
-    && typeof props.spec.viewport === 'object'
-      ? props.spec.viewport as Record<string, unknown>
-      : {}
-  )
-
-  return {
-    width: Number(source.width) || 1200,
-    height: Number(source.height) || 760
-  }
-})
-
 const nodes = computed(() => {
   const source = (
     Array.isArray(props.spec.nodes)
@@ -52,14 +38,18 @@ const nodes = computed(() => {
       : []
   )
 
-  if (
-    source.length === 0
-    || source.every(
+  const hasCompleteLayout = (
+    source.length > 0
+    && source.every(
       node =>
         Number.isFinite(node.x)
         && Number.isFinite(node.y)
+        && Number.isFinite(node.width)
+        && Number.isFinite(node.height)
     )
-  ) {
+  )
+
+  if (source.length === 0 || hasCompleteLayout) {
     return source
   }
 
@@ -69,16 +59,6 @@ const nodes = computed(() => {
     ?? source[0]?.nodeId
     ?? ''
   )
-  const byParent = new Map<string | null, MindNode[]>()
-
-  source.forEach(node => {
-    const key = node.parentId ?? null
-    byParent.set(
-      key,
-      [...(byParent.get(key) ?? []), node]
-    )
-  })
-
   const root = source.find(
     node => node.nodeId === rootId
   ) ?? source[0]
@@ -87,41 +67,149 @@ const nodes = computed(() => {
     return []
   }
 
-  const result: MindNode[] = [{
-    ...root,
-    x: 600,
-    y: 92,
-    level: 0
-  }]
-  const branches = byParent.get(root.nodeId) ?? []
+  const byId = new Map(
+    source.map(node => [node.nodeId, node])
+  )
+  const children = new Map<string, MindNode[]>()
 
-  branches.forEach((branch, index) => {
-    const x = 160 + index * (
-      880 / Math.max(branches.length - 1, 1)
-    )
-
-    result.push({
-      ...branch,
-      x,
-      y: 260,
-      level: 1
-    })
-
-    const children = byParent.get(branch.nodeId) ?? []
-
-    children.forEach((child, childIndex) => {
-      result.push({
-        ...child,
-        x: x + (
-          childIndex - (children.length - 1) / 2
-        ) * 260,
-        y: 450,
-        level: 2
-      })
-    })
+  source.forEach(node => {
+    children.set(node.nodeId, [])
   })
 
+  source.forEach(node => {
+    if (
+      node.nodeId !== root.nodeId
+      && node.parentId
+      && byId.has(node.parentId)
+    ) {
+      children.set(
+        node.parentId,
+        [...(children.get(node.parentId) ?? []), node]
+      )
+    }
+  })
+
+  const size = (node: MindNode) => {
+    const lines = Math.max(
+      1,
+      Math.ceil(node.label.length / 24)
+    )
+    return {
+      width: Math.min(
+        320,
+        Math.max(188, 88 + Math.min(
+          Math.max(node.label.length, 12),
+          30
+        ) * 7)
+      ),
+      height: Math.max(68, 34 + lines * 20)
+    }
+  }
+  const widths = new Map<string, number>()
+  const measure = (
+    node: MindNode,
+    ancestry = new Set<string>()
+  ): number => {
+    if (widths.has(node.nodeId)) {
+      return widths.get(node.nodeId)!
+    }
+
+    if (ancestry.has(node.nodeId)) {
+      return size(node).width
+    }
+
+    const next = new Set(ancestry)
+    next.add(node.nodeId)
+    const childWidths = (children.get(node.nodeId) ?? [])
+      .filter(child => !next.has(child.nodeId))
+      .map(child => measure(child, next))
+    const width = Math.max(
+      size(node).width,
+      childWidths.reduce(
+        (total, value) => total + value,
+        0
+      ) + Math.max(childWidths.length - 1, 0) * 56
+    )
+    widths.set(node.nodeId, width)
+    return width
+  }
+
+  const result: MindNode[] = []
+  const positioned = new Set<string>()
+  const place = (
+    node: MindNode,
+    left: number,
+    level: number,
+    ancestry = new Set<string>()
+  ) => {
+    if (ancestry.has(node.nodeId)) {
+      return
+    }
+
+    const next = new Set(ancestry)
+    next.add(node.nodeId)
+    const dimensions = size(node)
+    const subtreeWidth = measure(node)
+    result.push({
+      ...node,
+      x: left + subtreeWidth / 2,
+      y: 120 + level * 180,
+      level,
+      width: dimensions.width,
+      height: dimensions.height
+    })
+    positioned.add(node.nodeId)
+
+    let childLeft = left
+
+    for (const child of children.get(node.nodeId) ?? []) {
+      if (!next.has(child.nodeId)) {
+        place(child, childLeft, level + 1, next)
+        childLeft += measure(child) + 56
+      }
+    }
+  }
+
+  place(root, 120, 0)
+
+  source
+    .filter(node => !positioned.has(node.nodeId))
+    .forEach(node => {
+      const left = (
+        Math.max(
+          ...result.map(item => item.x + nodeWidth(item) / 2),
+          120
+        ) + 56
+      )
+      place(node, left, 1)
+    })
+
   return result
+})
+
+const viewport = computed(() => {
+  const source = (
+    props.spec.viewport
+    && typeof props.spec.viewport === 'object'
+      ? props.spec.viewport as Record<string, unknown>
+      : {}
+  )
+  const width = Math.max(
+    Number(source.width) || 0,
+    ...nodes.value.map(
+      node => node.x + nodeWidth(node) / 2 + 120
+    ),
+    960
+  )
+  const height = Math.max(
+    Number(source.height) || 0,
+    ...nodes.value.map(
+      node => node.y + nodeHeight(node) / 2 + 120
+    ),
+    560
+  )
+
+  return { width, height }
 })
 
 const edges = computed(
