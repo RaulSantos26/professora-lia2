@@ -28,12 +28,70 @@ class PedagogicalGenerationService:
             questionCount=questionCount,
         )
 
-        return self.ollama.chatStructured(
+        result = self.ollama.chatStructured(
             modelId=modelId,
             prompt=prompt,
             schema=schema,
             think=thinkingEnabled,
         )
+
+        if artifactType == "MIND_MAP":
+            return self._normalizeMindMap(result)
+
+        return result
+
+    def _normalizeMindMap(self, content: dict) -> dict:
+        source = [
+            dict(node)
+            for node in content.get("nodes", [])
+            if isinstance(node, dict) and node.get("nodeId") is not None
+        ]
+        if not source:
+            return content
+
+        byId = {str(node["nodeId"]): node for node in source}
+        rootId = str(content.get("rootId") or next(iter(byId)))
+        if rootId not in byId:
+            rootId = next(iter(byId))
+
+        for nodeId, node in byId.items():
+            node["nodeId"] = nodeId
+            parentId = node.get("parentId")
+            if nodeId == rootId:
+                node["parentId"] = None
+            elif (
+                parentId is None
+                or str(parentId) not in byId
+                or str(parentId) == nodeId
+            ):
+                node["parentId"] = rootId
+            else:
+                node["parentId"] = str(parentId)
+
+        def reachesSelf(nodeId: str) -> bool:
+            visited: set[str] = set()
+            current = nodeId
+            while True:
+                parentId = byId[current].get("parentId")
+                if parentId is None:
+                    return False
+                parentId = str(parentId)
+                if parentId == nodeId or parentId in visited:
+                    return True
+                if parentId not in byId:
+                    return False
+                visited.add(parentId)
+                current = parentId
+
+        for nodeId, node in byId.items():
+            if nodeId != rootId and reachesSelf(nodeId):
+                node["parentId"] = rootId
+
+        return {
+            **content,
+            "rootId": rootId,
+            "nodes": list(byId.values()),
+        }
 
     def _prompt(
         self,
@@ -57,7 +115,10 @@ class PedagogicalGenerationService:
                 "Produza um resumo fiel, organizado e adequado para revisão."
             ),
             "MIND_MAP": (
-                "Crie um mapa mental hierárquico dos conceitos e relações."
+                "Crie um mapa mental hierárquico dos conceitos e relações. "
+                "Use exatamente um nó raiz, identificado por rootId; cada "
+                "outro nó deve apontar para um parentId existente. Nunca "
+                "deixe todos os nós com parentId nulo."
             ),
             "FLASHCARDS": (
                 "Crie flashcards de revisão cobrindo os conceitos centrais."

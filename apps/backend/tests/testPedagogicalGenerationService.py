@@ -48,3 +48,25 @@ def testMindMapSchemaIsStructured():
 
     assert "rootId" in schema["required"]
     assert "nodes" in schema["required"]
+
+
+def testMindMapNormalizationConnectsOrphanNodesToRoot():
+    service = PedagogicalGenerationService()
+
+    normalized = service._normalizeMindMap(
+        {
+            "title": "Tema",
+            "rootId": "1",
+            "nodes": [
+                {"nodeId": "1", "parentId": None, "label": "Tema"},
+                {"nodeId": "2", "parentId": None, "label": "Ramo"},
+                {"nodeId": "3", "parentId": None, "label": "Outro ramo"},
+            ],
+        }
+    )
+
+    parents = {
+        node["nodeId"]: node["parentId"]
+        for node in normalized["nodes"]
+    }
+    assert parents == {"1": None, "2": "1", "3": "1"}

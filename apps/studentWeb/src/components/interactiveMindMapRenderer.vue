@@ -125,17 +125,24 @@ const baseNodes = computed<MindNode[]>(() => {
     children.set(node.nodeId, [])
   })
 
+  const effectiveParents = new Map<string, string | null>()
+
   source.forEach(node => {
-    if (
-      node.nodeId !== root.nodeId
-      && node.parentId
-      && byId.has(node.parentId)
-    ) {
-      children.set(
-        node.parentId,
-        [...(children.get(node.parentId) ?? []), node]
-      )
+    if (node.nodeId === root.nodeId) {
+      effectiveParents.set(node.nodeId, null)
+      return
     }
+
+    const parentId = node.parentId && byId.has(node.parentId)
+      && node.parentId !== node.nodeId
+      ? node.parentId
+      : root.nodeId
+
+    effectiveParents.set(node.nodeId, parentId)
+    children.set(
+      parentId,
+      [...(children.get(parentId) ?? []), node]
+    )
   })
 
   const raw: Array<MindNode & {
@@ -187,6 +194,7 @@ const baseNodes = computed<MindNode[]>(() => {
 
     raw.push({
       ...node,
+      parentId: effectiveParents.get(node.nodeId) ?? null,
       x: Math.cos(angle) * distance,
       y: Math.sin(angle) * distance,
       level: depth,
