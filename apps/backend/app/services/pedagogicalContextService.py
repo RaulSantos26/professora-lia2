@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.domain.common.domainError import DomainError
 from app.repositories.materialRepository import MaterialRepository
 from app.repositories.ragRepository import RagCandidate, RagRepository
+from app.services.contentGuardService import ContentGuardService
 from app.services.ollamaClientService import OllamaClientService
 
 
@@ -16,6 +17,7 @@ class PedagogicalContextService:
     def __init__(self, session: Session):
         self.materialRepository = MaterialRepository(session)
         self.ragRepository = RagRepository(session)
+        self.contentGuard = ContentGuardService()
         self.ollama = OllamaClientService()
 
     def build(
@@ -115,10 +117,11 @@ class PedagogicalContextService:
             start=1,
         ):
             excerpt = candidate.content[:2200]
+            protected = self.contentGuard.protect(excerpt)
             piece = (
                 f"[{index}] Material: {candidate.materialTitle}\n"
                 f"Local: {candidate.locator}\n"
-                f"Trecho: {excerpt}"
+                f"Trecho: {protected.content}"
             )
 
             if totalChars + len(piece) > self.MAX_CONTEXT_CHARS:

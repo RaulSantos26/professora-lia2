@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.domain.common.domainError import DomainError
 from app.repositories.ragRepository import RagCandidate, RagRepository
+from app.services.contentGuardService import ContentGuardService
 from app.services.ollamaClientService import OllamaClientService
 
 
@@ -13,6 +14,7 @@ class EvidenceSearchTool:
 
     def __init__(self, session: Session):
         self.repository = RagRepository(session)
+        self.contentGuard = ContentGuardService()
         self.ollama = OllamaClientService()
 
     def execute(
@@ -123,7 +125,7 @@ class EvidenceSearchTool:
             (
                 f"[{hit['index']}] "
                 f"{hit['materialTitle']} · {hit['locator']}\n"
-                f"{hit['excerpt']}"
+                f"{self.contentGuard.protect(hit['excerpt']).content}"
             )
             for hit in hits
         )
