@@ -21,6 +21,7 @@ export interface AgentMessageContract {
   content: string
   citations: Array<Record<string, unknown>>
   visualTaskIds: string[]
+  imageTaskIds: string[]
   actions: Array<Record<string, unknown>>
   createdAt: string
 }

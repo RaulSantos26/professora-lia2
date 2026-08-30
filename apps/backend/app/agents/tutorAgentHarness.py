@@ -18,6 +18,7 @@ from app.tools.evidenceSearchTool import EvidenceSearchTool
 from app.tools.pedagogicalCreateTool import PedagogicalCreateTool
 from app.tools.progressReadTool import ProgressReadTool
 from app.tools.visualCreateTool import VisualCreateTool
+from app.tools.imageCreateTool import ImageCreateTool
 
 
 class TutorAgentHarness:
@@ -37,6 +38,7 @@ class TutorAgentHarness:
             session
         )
         self.visualTool = VisualCreateTool(session)
+        self.imageTool = ImageCreateTool(session)
 
     def process(
         self,
@@ -97,6 +99,7 @@ class TutorAgentHarness:
         progress = None
         actions = []
         visualTaskIds = []
+        imageTaskIds = []
 
         tools = list(plan.get("tools") or [])
 
@@ -269,6 +272,37 @@ class TutorAgentHarness:
                 action["visualTaskId"]
             )
 
+        if "IMAGE_GENERATION" in tools:
+            imageMode = plan.get("imageMode") or (
+                "MIND_MAP_COMPANION" if plan.get("intent") == "MIND_MAP" else "ILLUSTRATION"
+            )
+            relatedVisualTaskId = (
+                UUID(visualTaskIds[-1]) if imageMode == "MIND_MAP_COMPANION" and visualTaskIds else None
+            )
+            action = self.toolExecutor.execute(
+                runId=run.agentRunId,
+                toolName="IMAGE_GENERATION",
+                request={
+                    "imageMode": imageMode,
+                    "materialIds": actionMaterialIds,
+                    "relatedVisualTaskId": str(relatedVisualTaskId) if relatedVisualTaskId else None,
+                },
+                callback=lambda: self.imageTool.execute(
+                    studentId=thread.studentId,
+                    imageMode=str(imageMode),
+                    instruction=userMessage.content,
+                    materialIds=actionMaterialIds,
+                    studentLearningContextId=thread.studentLearningContextId,
+                    studentSubjectId=thread.studentSubjectId,
+                    studentLearningUnitId=thread.studentLearningUnitId,
+                    agentThreadId=thread.agentThreadId,
+                    agentRunId=run.agentRunId,
+                    relatedVisualTaskId=relatedVisualTaskId,
+                ),
+            )
+            actions.append({"type": "IMAGE_TASK", **action})
+            imageTaskIds.append(action["imageTaskId"])
+
         run.stage = "ANSWERING"
         run.progressPercent = 75
         run.message = "A Lia está preparando a resposta."
@@ -322,6 +356,7 @@ class TutorAgentHarness:
             ),
             citationsJson=citations,
             visualTaskIds=visualTaskIds,
+            imageTaskIds=imageTaskIds,
             actionsJson=actions,
         )
         self.repository.createMessage(assistant)

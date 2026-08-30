@@ -45,6 +45,7 @@ class AgentMessageContract(BaseModel):
     content: str
     citations: list[dict]
     visualTaskIds: list[UUID]
+    imageTaskIds: list[UUID] = Field(default_factory=list)
     actions: list[dict]
     createdAt: datetime
 

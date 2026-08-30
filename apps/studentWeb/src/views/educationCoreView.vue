@@ -749,6 +749,7 @@ const {
   threads: tutorThreads,
   conversation: tutorConversation,
   visualTasks: tutorVisualTasks,
+  imageTasks: tutorImageTasks,
   busy: tutorBusy,
   ensureContextThread,
   selectThread: selectTutorThread,
@@ -1047,6 +1048,7 @@ onMounted(async () => {
         :threads="tutorThreads"
         :conversation="tutorConversation"
         :visual-tasks="tutorVisualTasks"
+        :image-tasks="tutorImageTasks"
         :materials="materialsForSelectedLesson"
         :selected-material="selectedMaterial"
         :subjects="materialSubjects"

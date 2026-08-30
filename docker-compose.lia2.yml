@@ -24,12 +24,40 @@ services:
       LIA2_AGENT_TUTOR_POLL_SECONDS: "1.0"
       LIA2_OLLAMA_CHAT_TIMEOUT_SECONDS: "360"
       LIA2_OLLAMA_EMBEDDING_TIMEOUT_SECONDS: "180"
+      LIA2_IMAGE_SERVICE_URL: http://lia2-image-service:8000
+      LIA2_IMAGE_INTERNAL_TOKEN: ${LIA2_OPS_INTERNAL_TOKEN}
+      LIA2_IMAGE_WORKER_ENABLED: "true"
+      LIA2_IMAGE_WORKER_POLL_SECONDS: "1.0"
     ports:
       - "${LIA2_BACKEND_PORT:-8196}:8000"
     volumes:
       - lia2_materials:/var/lib/lia2-materials
     networks:
       - docker_default
+
+  lia2-image-service:
+    build:
+      context: ./apps/imageService
+    container_name: lia2-image-service
+    restart: unless-stopped
+    environment:
+      LIA2_IMAGE_INTERNAL_TOKEN: ${LIA2_OPS_INTERNAL_TOKEN}
+      LIA2_ZIMAGE_MODEL_ID: Tongyi-MAI/Z-Image-Turbo
+      LIA2_ZIMAGE_LOCAL_FILES_ONLY: "true"
+      LIA2_ZIMAGE_WARM_ON_STARTUP: "true"
+      LIA2_IMAGE_OUTPUT_PATH: /var/lib/lia2-generated-images
+    volumes:
+      - lia2_zimage_hf_cache:/cache/huggingface
+      - lia2_generated_images:/var/lib/lia2-generated-images
+    networks:
+      - docker_default
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
   lia2-ops-agent:
     build:
@@ -102,3 +130,6 @@ networks:
 volumes:
   lia2_ops_audit:
   lia2_materials:
+  lia2_zimage_hf_cache:
+    external: true
+  lia2_generated_images:

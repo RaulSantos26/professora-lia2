@@ -36,6 +36,7 @@ from app.persistence.models.agentMessageModel import AgentMessageModel
 from app.persistence.models.agentRunModel import AgentRunModel
 from app.persistence.models.agentToolCallModel import AgentToolCallModel
 from app.persistence.models.visualTaskModel import VisualTaskModel
+from app.persistence.models.imageGenerationTaskModel import ImageGenerationTaskModel
 
 
 config = context.config

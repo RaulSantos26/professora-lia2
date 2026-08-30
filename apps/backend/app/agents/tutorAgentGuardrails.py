@@ -9,6 +9,7 @@ class TutorAgentGuardrails:
         "PROGRESS_READ",
         "PEDAGOGICAL_CREATE",
         "VISUAL_CREATE",
+        "IMAGE_GENERATION",
     }
 
     def validatePlan(self, plan: dict) -> None:

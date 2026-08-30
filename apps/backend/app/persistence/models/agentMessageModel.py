@@ -52,6 +52,12 @@ class AgentMessageModel(BaseModel):
         nullable=False,
         default=list,
     )
+    imageTaskIds: Mapped[list] = mapped_column(
+        "image_task_ids",
+        JSONB,
+        nullable=False,
+        default=list,
+    )
     actionsJson: Mapped[list] = mapped_column(
         "actions_json",
         JSONB,

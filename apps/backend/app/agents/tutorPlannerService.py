@@ -45,6 +45,7 @@ class TutorPlannerService:
                             "PROGRESS_READ",
                             "PEDAGOGICAL_CREATE",
                             "VISUAL_CREATE",
+                            "IMAGE_GENERATION",
                         ],
                     },
                 },
@@ -64,6 +65,10 @@ class TutorPlannerService:
                         "SCENE_3D",
                         None,
                     ],
+                },
+                "imageMode": {
+                    "type": ["string", "null"],
+                    "enum": ["ILLUSTRATION", "MIND_MAP_COMPANION", None],
                 },
                 "pedagogicalType": {
                     "type": [
@@ -86,6 +91,7 @@ class TutorPlannerService:
                 "tools",
                 "reason",
                 "visualType",
+                "imageMode",
                 "pedagogicalType",
             ],
         }
@@ -103,8 +109,9 @@ REGRAS:
   DEVEM usar EVIDENCE_SEARCH.
 - TEACH, EXPLAIN, SUMMARY, FLASHCARDS, EXERCISES e QUIZ:
   use EVIDENCE_SEARCH + PEDAGOGICAL_CREATE.
-- MIND_MAP, DIAGRAM, CHART, ANIMATION_2D, SCENE_3D:
-  use EVIDENCE_SEARCH + VISUAL_CREATE.
+- MIND_MAP usa EVIDENCE_SEARCH + VISUAL_CREATE + IMAGE_GENERATION, com imageMode MIND_MAP_COMPANION.
+- DIAGRAM, CHART, ANIMATION_2D e SCENE_3D usam EVIDENCE_SEARCH + VISUAL_CREATE.
+- Quando o aluno pedir imagem, desenho, ilustração, figura ou visual didático, use EVIDENCE_SEARCH + IMAGE_GENERATION, com imageMode ILLUSTRATION.
 - ANSWER usa EVIDENCE_SEARCH.
 - Não invente ferramentas.
 - Não responda ao aluno. Apenas planeje.

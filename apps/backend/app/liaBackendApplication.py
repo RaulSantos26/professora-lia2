@@ -25,10 +25,12 @@ from app.controllers.pedagogicalController import router as pedagogicalRouter
 from app.controllers.studentController import router as studentRouter
 from app.controllers.agentTutorController import router as agentTutorRouter
 from app.controllers.visualTaskController import router as visualTaskRouter
+from app.controllers.imageGenerationController import router as imageGenerationRouter
 from app.domain.common.domainError import DomainError
 from app.services.materialProcessingWorker import materialProcessingWorker
 from app.services.pedagogicalWorker import pedagogicalWorker
 from app.services.agentTutorWorker import agentTutorWorker
+from app.services.imageGenerationWorker import imageGenerationWorker
 from app.observability.correlationMiddleware import CorrelationMiddleware
 
 
@@ -60,6 +62,7 @@ application.include_router(ragRouter)
 application.include_router(pedagogicalRouter)
 application.include_router(agentTutorRouter)
 application.include_router(visualTaskRouter)
+application.include_router(imageGenerationRouter)
 
 
 @application.on_event("startup")
@@ -67,6 +70,7 @@ async def startMaterialProcessingWorker() -> None:
     materialProcessingWorker.start()
     pedagogicalWorker.start()
     agentTutorWorker.start()
+    imageGenerationWorker.start()
 
 
 @application.on_event("shutdown")
@@ -74,6 +78,7 @@ async def stopMaterialProcessingWorker() -> None:
     materialProcessingWorker.stop()
     pedagogicalWorker.stop()
     agentTutorWorker.stop()
+    imageGenerationWorker.stop()
 
 
 @application.exception_handler(DomainError)

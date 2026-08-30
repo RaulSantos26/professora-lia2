@@ -19,6 +19,7 @@ def testAgentHarnessHasExplicitSkillsToolsAndGuardrails():
     assert "PROGRESS_READ" in harness
     assert "PEDAGOGICAL_CREATE" in harness
     assert "VISUAL_CREATE" in harness
+    assert "IMAGE_GENERATION" in harness
 
 
 def _migrationFile() -> Path:

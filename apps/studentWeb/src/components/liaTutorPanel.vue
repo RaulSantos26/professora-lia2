@@ -7,6 +7,7 @@ import {
 } from 'vue'
 
 import VisualTaskRenderer from './visualTaskRenderer.vue'
+import ImageGenerationTaskRenderer from './imageGenerationTaskRenderer.vue'
 
 import type {
   AgentConversationContract,
@@ -24,11 +25,13 @@ import type { StudentLearningUnitContract } from '../contracts/studentLearningUn
 import type {
   VisualTaskContract
 } from '../contracts/visualTaskContract'
+import type { ImageGenerationTaskContract } from '../contracts/imageGenerationContract'
 
 const props = defineProps<{
   threads: AgentThreadContract[]
   conversation: AgentConversationContract | null
   visualTasks: Record<string, VisualTaskContract>
+  imageTasks: Record<string, ImageGenerationTaskContract>
   materials: MaterialContract[]
   selectedMaterial: MaterialContract | null
   subjects: StudentSubjectContract[]
@@ -436,6 +439,13 @@ function openPedagogicalAction(
               <VisualTaskRenderer
                 v-if="visualTasks[visualTaskId]"
                 :task="visualTasks[visualTaskId]"
+              />
+            </template>
+
+            <template v-for="imageTaskId in item.imageTaskIds" :key="imageTaskId">
+              <ImageGenerationTaskRenderer
+                v-if="imageTasks[imageTaskId]"
+                :task="imageTasks[imageTaskId]"
               />
             </template>
 

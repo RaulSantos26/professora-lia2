@@ -11,6 +11,7 @@ import type {
 import type {
   VisualTaskContract
 } from '../contracts/visualTaskContract'
+import type { ImageGenerationTaskContract } from '../contracts/imageGenerationContract'
 import type {
   StudentContract
 } from '../contracts/studentContract'
@@ -20,6 +21,7 @@ import {
 import {
   VisualTaskApiService
 } from '../services/visualTaskApiService'
+import { ImageGenerationApiService } from '../services/imageGenerationApiService'
 
 interface TutorContext {
   contextId: string | null
@@ -41,10 +43,12 @@ export function useAgentTutorWorkspace(
 ) {
   const api = new AgentTutorApiService()
   const visualApi = new VisualTaskApiService()
+  const imageApi = new ImageGenerationApiService()
 
   const threads = ref<AgentThreadContract[]>([])
   const conversation = ref<AgentConversationContract | null>(null)
   const visualTasks = ref<Record<string, VisualTaskContract>>({})
+  const imageTasks = ref<Record<string, ImageGenerationTaskContract>>({})
   const busy = ref(false)
   let pollTimer: number | null = null
   let lastActiveRunId: string | null = null
@@ -126,6 +130,7 @@ export function useAgentTutorWorkspace(
       return
     }
 
+
     stopPolling()
 
     conversation.value = await api.getConversation(
@@ -134,6 +139,7 @@ export function useAgentTutorWorkspace(
     )
 
     await hydrateVisualTasks()
+    await hydrateImageTasks()
 
     lastActiveRunId = (
       conversation.value.activeRun?.agentRunId
@@ -197,6 +203,7 @@ export function useAgentTutorWorkspace(
     )
 
     await hydrateVisualTasks()
+    await hydrateImageTasks()
 
     if (conversation.value.activeRun) {
       lastActiveRunId = conversation.value.activeRun.agentRunId
@@ -231,6 +238,10 @@ export function useAgentTutorWorkspace(
       ])
     }
 
+
+    if (Object.values(imageTasks.value).some(task => ["QUEUED", "PREPARING", "GENERATING", "LABELING"].includes(task.status))) {
+      return
+    }
     stopPolling()
   }
 
@@ -280,6 +291,8 @@ export function useAgentTutorWorkspace(
       )
       conversation.value = null
       visualTasks.value = {}
+    imageTasks.value = {}
+      imageTasks.value = {}
       await loadThreads({
         contextId: conversation.value?.thread.studentLearningContextId ?? null,
         subjectId: conversation.value?.thread.studentSubjectId ?? null,
@@ -336,6 +349,28 @@ export function useAgentTutorWorkspace(
     visualTasks.value = next
   }
 
+  async function hydrateImageTasks() {
+    if (!options.selectedStudent.value || !conversation.value) return
+    const ids = Array.from(new Set(conversation.value.messages.flatMap(message => message.imageTaskIds)))
+    const missing = ids.filter(id => !imageTasks.value[id])
+    if (missing.length > 0) {
+      const loaded = await Promise.all(missing.map(id => imageApi.get(options.selectedStudent.value!.studentId, id)))
+      const next = { ...imageTasks.value }
+      loaded.forEach(task => { next[task.imageTaskId] = task })
+      imageTasks.value = next
+    }
+    const activeIds = ids.filter(id => {
+      const status = imageTasks.value[id]?.status
+      return status === "QUEUED" || status === "PREPARING" || status === "GENERATING" || status === "LABELING"
+    })
+    if (activeIds.length > 0) {
+      const loaded = await Promise.all(activeIds.map(id => imageApi.get(options.selectedStudent.value!.studentId, id)))
+      const next = { ...imageTasks.value }
+      loaded.forEach(task => { next[task.imageTaskId] = task })
+      imageTasks.value = next
+    }
+  }
+
   function startPolling() {
     if (pollTimer !== null) {
       return
@@ -346,7 +381,8 @@ export function useAgentTutorWorkspace(
         try {
           await refreshConversation()
         } catch (error) {
-          stopPolling()
+
+    stopPolling()
           options.showError(error)
         }
       },
@@ -364,10 +400,12 @@ export function useAgentTutorWorkspace(
   }
 
   function reset() {
+
     stopPolling()
     threads.value = []
     conversation.value = null
     visualTasks.value = {}
+    imageTasks.value = {}
     busy.value = false
     lastActiveRunId = null
   }
@@ -378,6 +416,7 @@ export function useAgentTutorWorkspace(
     selectedThread,
     activeRun,
     visualTasks,
+    imageTasks,
     busy,
     loadThreads,
     ensureContextThread,

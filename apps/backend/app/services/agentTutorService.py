@@ -167,6 +167,7 @@ class AgentTutorService:
             ),
             citationsJson=[],
             visualTaskIds=[],
+            imageTaskIds=[],
             actionsJson=[
                 {
                     "type": "MATERIAL_SCOPE",
@@ -579,6 +580,12 @@ class AgentTutorService:
                 UUID(value)
                 for value in (
                     model.visualTaskIds or []
+                )
+            ],
+            imageTaskIds=[
+                UUID(value)
+                for value in (
+                    model.imageTaskIds or []
                 )
             ],
             actions=model.actionsJson or [],
