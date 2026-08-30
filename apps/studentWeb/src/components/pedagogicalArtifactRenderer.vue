@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 import ExerciseRunner from './exerciseRunner.vue'
 import InteractiveMindMapRenderer from './interactiveMindMapRenderer.vue'
+import ImageGenerationTaskRenderer from './imageGenerationTaskRenderer.vue'
 
 import type {
   LearningAttemptContract,
   PedagogicalArtifactContract
 } from '../contracts/pedagogicalContract'
+import type { ImageGenerationTaskContract } from '../contracts/imageGenerationContract'
+import { ImageGenerationApiService } from '../services/imageGenerationApiService'
 
 const props = defineProps<{
   artifact: PedagogicalArtifactContract
@@ -20,6 +23,9 @@ const emit = defineEmits<{
 }>()
 
 const revealedCards = ref<Set<string>>(new Set())
+const imageTask = ref<ImageGenerationTaskContract | null>(null)
+const imageApi = new ImageGenerationApiService()
+let imagePollTimer: ReturnType<typeof setInterval> | null = null
 
 watch(
   () => props.artifact.pedagogicalArtifactId,
@@ -28,6 +34,44 @@ watch(
   }
 )
 
+function stopImagePolling() {
+  if (imagePollTimer) {
+    clearInterval(imagePollTimer)
+    imagePollTimer = null
+  }
+}
+
+async function loadImageTask() {
+  const imageTaskId = props.artifact.imageTaskId
+  if (props.artifact.artifactType !== 'MIND_MAP' || !imageTaskId) {
+    imageTask.value = null
+    stopImagePolling()
+    return
+  }
+
+  try {
+    const task = await imageApi.get(props.artifact.studentId, imageTaskId)
+    imageTask.value = task
+    if (['READY', 'ERROR', 'CANCELLED'].includes(task.status)) stopImagePolling()
+  } catch {
+    imageTask.value = null
+    stopImagePolling()
+  }
+}
+
+watch(
+  () => [props.artifact.pedagogicalArtifactId, props.artifact.imageTaskId],
+  async () => {
+    stopImagePolling()
+    await loadImageTask()
+    if (imageTask.value && !['READY', 'ERROR', 'CANCELLED'].includes(imageTask.value.status)) {
+      imagePollTimer = setInterval(() => { void loadImageTask() }, 2500)
+    }
+  },
+  { immediate: true }
+)
+
+onBeforeUnmount(stopImagePolling)
 const content = computed(
   () => props.artifact.content ?? {}
 )
@@ -118,10 +162,13 @@ function toggleCard(cardId: string) {
       </section>
     </template>
 
-    <InteractiveMindMapRenderer
-      v-else-if="artifact.artifactType === 'MIND_MAP'"
-      :spec="content"
-    />
+    <template v-else-if="artifact.artifactType === 'MIND_MAP'">
+      <InteractiveMindMapRenderer :spec="content" />
+      <ImageGenerationTaskRenderer
+        v-if="imageTask"
+        :task="imageTask"
+      />
+    </template>
 
     <div
       v-else-if="artifact.artifactType === 'FLASHCARDS'"

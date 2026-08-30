@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.contracts.imageGenerationContract import ImageGenerationTaskContract
 from app.domain.common.domainError import DomainError
 from app.persistence.models.imageGenerationTaskModel import ImageGenerationTaskModel
+from app.persistence.models.pedagogicalArtifactModel import PedagogicalArtifactModel
 from app.repositories.imageGenerationRepository import ImageGenerationRepository
 from app.repositories.studentRepository import StudentRepository
 from app.services.contentGuardService import ContentGuardService
@@ -58,6 +59,37 @@ class ImageGenerationService:
         if model is None or model.studentId != studentId:
             raise DomainError(code="IMAGE_TASK_NOT_FOUND", message="Imagem didática não encontrada.", httpStatus=404)
         return self._toContract(model)
+    def createForPedagogicalMindMap(
+        self,
+        *,
+        artifact: PedagogicalArtifactModel,
+        evidence: list[dict],
+    ) -> ImageGenerationTaskModel:
+        """Queue exactly one Z-Image companion for a saved interactive map."""
+        existing = self.repository.findByPedagogicalArtifactId(
+            artifact.pedagogicalArtifactId
+        )
+        if existing is not None:
+            artifact.imageTaskId = existing.imageTaskId
+            return existing
+
+        instruction = artifact.instruction or artifact.title
+        model = ImageGenerationTaskModel(
+            studentId=artifact.studentId,
+            agentThreadId=None,
+            agentRunId=None,
+            relatedVisualTaskId=None,
+            relatedPedagogicalArtifactId=artifact.pedagogicalArtifactId,
+            imageMode="MIND_MAP_COMPANION",
+            title=self._title(instruction, "MIND_MAP_COMPANION"),
+            prompt=self._prompt(instruction, "MIND_MAP_COMPANION", evidence),
+            labelsJson=self._labels(evidence, "MIND_MAP_COMPANION"),
+            evidenceJson=evidence,
+            sourceMaterialIds=list(artifact.sourceMaterialIds or []),
+        )
+        self.repository.create(model)
+        artifact.imageTaskId = model.imageTaskId
+        return model
 
     def list(self, *, studentId: UUID, taskIds: list[UUID] | None = None) -> list[ImageGenerationTaskContract]:
         return [self._toContract(model) for model in self.repository.listByStudent(studentId, taskIds)]
@@ -108,7 +140,9 @@ class ImageGenerationService:
         return ImageGenerationTaskContract(
             imageTaskId=model.imageTaskId, studentId=model.studentId,
             agentThreadId=model.agentThreadId, agentRunId=model.agentRunId,
-            relatedVisualTaskId=model.relatedVisualTaskId, imageMode=model.imageMode,
+            relatedVisualTaskId=model.relatedVisualTaskId,
+            relatedPedagogicalArtifactId=model.relatedPedagogicalArtifactId,
+            imageMode=model.imageMode,
             status=model.status, progressPercent=model.progressPercent,
             message=model.message, title=model.title, labels=model.labelsJson or [],
             assetUrl=(f"/api/students/{model.studentId}/image-tasks/{model.imageTaskId}/asset" if model.assetFilename else None),

@@ -22,6 +22,7 @@ export interface PedagogicalArtifactContract {
   studentLearningContextId: string | null
   studentSubjectId: string | null
   studentLearningUnitId: string | null
+  imageTaskId: string | null
   artifactType: PedagogicalArtifactType
   status: 'QUEUED' | 'RUNNING' | 'READY' | 'FAILED' | 'ARCHIVED'
   progressPercent: number

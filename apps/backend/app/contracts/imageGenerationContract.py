@@ -16,6 +16,7 @@ class ImageGenerationTaskContract(BaseModel):
     agentThreadId: UUID | None
     agentRunId: UUID | None
     relatedVisualTaskId: UUID | None
+    relatedPedagogicalArtifactId: UUID | None
     imageMode: ImageMode
     status: ImageStatus
     progressPercent: int

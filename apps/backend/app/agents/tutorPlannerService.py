@@ -1,3 +1,5 @@
+import unicodedata
+
 from app.services.ollamaClientService import OllamaClientService
 
 
@@ -123,9 +125,53 @@ MENSAGEM DO ALUNO:
 {message}
 """.strip()
 
-        return self.ollama.chatStructured(
+        plan = self.ollama.chatStructured(
             modelId=modelId,
             prompt=prompt,
             schema=schema,
             think=thinkingEnabled,
         )
+        return self.enforceVisualIntent(plan=plan, message=message)
+
+    @staticmethod
+    def enforceVisualIntent(*, plan: dict, message: str) -> dict:
+        """Ensure explicit student requests reach the internal visual tools."""
+        normalized = unicodedata.normalize("NFKD", message).encode(
+            "ascii", "ignore"
+        ).decode("ascii").casefold()
+        adjusted = dict(plan)
+
+        if "mapa mental" in normalized:
+            adjusted.update(
+                {
+                    "intent": "MIND_MAP",
+                    "tools": [
+                        "EVIDENCE_SEARCH",
+                        "VISUAL_CREATE",
+                        "IMAGE_GENERATION",
+                    ],
+                    "visualType": "MIND_MAP",
+                    "imageMode": "MIND_MAP_COMPANION",
+                }
+            )
+            return adjusted
+
+        illustrationTerms = (
+            "ilustracao",
+            "imagem",
+            "desenho",
+            "figura",
+            "visual didatico",
+        )
+        if any(term in normalized for term in illustrationTerms):
+            adjusted.update(
+                {
+                    "tools": [
+                        "EVIDENCE_SEARCH",
+                        "IMAGE_GENERATION",
+                    ],
+                    "imageMode": "ILLUSTRATION",
+                }
+            )
+
+        return adjusted

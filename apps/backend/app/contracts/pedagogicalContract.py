@@ -57,6 +57,7 @@ class PedagogicalArtifactContract(BaseModel):
     studentLearningContextId: UUID | None
     studentSubjectId: UUID | None
     studentLearningUnitId: UUID | None
+    imageTaskId: UUID | None
     artifactType: PedagogicalArtifactType
     status: Literal[
         "QUEUED",

@@ -18,6 +18,19 @@ class ImageGenerationRepository:
 
     def findById(self, imageTaskId: UUID) -> ImageGenerationTaskModel | None:
         return self.session.get(ImageGenerationTaskModel, imageTaskId)
+    def findByPedagogicalArtifactId(
+        self,
+        pedagogicalArtifactId: UUID,
+    ) -> ImageGenerationTaskModel | None:
+        return self.session.scalar(
+            select(ImageGenerationTaskModel)
+            .where(
+                ImageGenerationTaskModel.relatedPedagogicalArtifactId
+                == pedagogicalArtifactId
+            )
+            .order_by(ImageGenerationTaskModel.createdAt.desc())
+            .limit(1)
+        )
 
     def listByStudent(self, studentId: UUID, taskIds: list[UUID] | None = None) -> list[ImageGenerationTaskModel]:
         statement = select(ImageGenerationTaskModel).where(ImageGenerationTaskModel.studentId == studentId)

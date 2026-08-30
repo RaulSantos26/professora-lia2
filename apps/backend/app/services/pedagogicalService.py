@@ -25,6 +25,7 @@ from app.services.aiModelRegistryService import AiModelRegistryService
 from app.services.capabilityRouterService import CapabilityRouterService
 from app.services.pedagogicalContextService import PedagogicalContextService
 from app.services.pedagogicalGenerationService import PedagogicalGenerationService
+from app.services.imageGenerationService import ImageGenerationService
 from app.services.thinkingPolicyService import ThinkingPolicyService
 from app.services.studentContentOwnershipService import StudentContentOwnershipService
 
@@ -44,6 +45,7 @@ class PedagogicalService:
         self.modelRegistry = AiModelRegistryService()
         self.thinking = ThinkingPolicyService()
         self.ownership = StudentContentOwnershipService(session)
+        self.imageGeneration = ImageGenerationService(session)
 
     def createArtifact(
         self,
@@ -235,6 +237,11 @@ class PedagogicalService:
             effectiveTextModelId=decision.effectiveModelId,
             sourceEvidence=evidence,
         )
+        if artifact.artifactType == "MIND_MAP":
+            self.imageGeneration.createForPedagogicalMindMap(
+                artifact=artifact,
+                evidence=evidence,
+            )
         self.session.commit()
 
     def submitAttempt(
@@ -426,6 +433,7 @@ class PedagogicalService:
             studentLearningContextId=model.studentLearningContextId,
             studentSubjectId=model.studentSubjectId,
             studentLearningUnitId=model.studentLearningUnitId,
+            imageTaskId=model.imageTaskId,
             artifactType=model.artifactType,
             status=model.status,
             progressPercent=model.progressPercent,

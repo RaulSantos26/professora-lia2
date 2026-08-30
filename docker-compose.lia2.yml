@@ -32,6 +32,7 @@ services:
       - "${LIA2_BACKEND_PORT:-8196}:8000"
     volumes:
       - lia2_materials:/var/lib/lia2-materials
+      - lia2_generated_images:/var/lib/lia2-generated-images
     networks:
       - docker_default
 

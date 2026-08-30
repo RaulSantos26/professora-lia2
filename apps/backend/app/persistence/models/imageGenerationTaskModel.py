@@ -22,6 +22,7 @@ class ImageGenerationTaskModel(BaseModel):
     agentThreadId: Mapped[UUID | None] = mapped_column("agent_thread_id", PostgresUuid(as_uuid=True), ForeignKey("lia2.agent_thread.agent_thread_id", ondelete="SET NULL"), nullable=True)
     agentRunId: Mapped[UUID | None] = mapped_column("agent_run_id", PostgresUuid(as_uuid=True), ForeignKey("lia2.agent_run.agent_run_id", ondelete="SET NULL"), nullable=True)
     relatedVisualTaskId: Mapped[UUID | None] = mapped_column("related_visual_task_id", PostgresUuid(as_uuid=True), ForeignKey("lia2.visual_task.visual_task_id", ondelete="SET NULL"), nullable=True)
+    relatedPedagogicalArtifactId: Mapped[UUID | None] = mapped_column("related_pedagogical_artifact_id", PostgresUuid(as_uuid=True), ForeignKey("lia2.pedagogical_artifact.pedagogical_artifact_id", ondelete="SET NULL"), nullable=True, index=True)
     imageMode: Mapped[str] = mapped_column("image_mode", String(30), nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="QUEUED")
     progressPercent: Mapped[int] = mapped_column("progress_percent", Integer, nullable=False, default=5)

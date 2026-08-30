@@ -53,6 +53,7 @@ class PedagogicalArtifactModel(BaseModel):
     studentLearningContextId: Mapped[UUID | None] = mapped_column("student_learning_context_id", PostgresUuid(as_uuid=True), ForeignKey("lia2.student_learning_context.student_learning_context_id", ondelete="RESTRICT"), nullable=True, index=True)
     studentSubjectId: Mapped[UUID | None] = mapped_column("student_subject_id", PostgresUuid(as_uuid=True), ForeignKey("lia2.student_subject.student_subject_id", ondelete="RESTRICT"), nullable=True, index=True)
     studentLearningUnitId: Mapped[UUID | None] = mapped_column("student_learning_unit_id", PostgresUuid(as_uuid=True), ForeignKey("lia2.student_learning_unit.student_learning_unit_id", ondelete="RESTRICT"), nullable=True, index=True)
+    imageTaskId: Mapped[UUID | None] = mapped_column("image_task_id", PostgresUuid(as_uuid=True), ForeignKey("lia2.image_generation_task.image_task_id", ondelete="SET NULL"), nullable=True, index=True)
     artifactType: Mapped[str] = mapped_column(
         "artifact_type",
         String(30),
