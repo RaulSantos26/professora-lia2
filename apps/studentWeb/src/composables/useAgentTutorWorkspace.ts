@@ -75,7 +75,12 @@ export function useAgentTutorWorkspace(
   async function ensureContextThread(
     context: TutorContext
   ) {
-    if (!options.selectedStudent.value) {
+    if (
+      !options.selectedStudent.value
+      || !context.contextId
+      || !context.subjectId
+      || !context.unitId
+    ) {
       reset()
       return
     }

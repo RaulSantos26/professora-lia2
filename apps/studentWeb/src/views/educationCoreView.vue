@@ -126,11 +126,32 @@ const selectedStudentContext = computed(
       === selectedStudentLearningContextId.value
   ) ?? null
 )
+const selectedMaterialContext = computed(
+  () => assignedContexts.value.find(
+    item =>
+      item.association.studentLearningContextId
+      === selectedMaterialContextId.value
+  ) ?? null
+)
+const selectedMaterialSubject = computed(
+  () => materialSubjects.value.find(
+    item =>
+      item.studentSubjectId === selectedMaterialSubjectId.value
+  ) ?? null
+)
 const selectedContextLabel = computed(
-  () => selectedStudentContext.value?.context.name ?? 'Nenhum selecionado'
+  () => (
+    selectedMaterialContext.value?.context.name
+    ?? selectedStudentContext.value?.context.name
+    ?? 'Nenhum selecionado'
+  )
 )
 const selectedSubjectLabel = computed(
-  () => selectedStudentSubject.value?.name ?? 'Nenhuma selecionada'
+  () => (
+    selectedMaterialSubject.value?.name
+    ?? selectedStudentSubject.value?.name
+    ?? 'Nenhuma selecionada'
+  )
 )
 async function refreshWorkspaceSummary() {
   if (!selectedStudent.value) {
@@ -697,40 +718,23 @@ watch(
   { immediate: true }
 )
 
-const tutorUnitId = computed(
-  () => selectedMaterial.value?.studentLearningUnitId ?? null
-)
 const tutorUnitLabel = computed(() => {
-  const unitId = tutorUnitId.value
-  if (!unitId) {
-    return 'Geral'
-  }
-  const unit = [
-    ...studentLearningUnits.value,
-    ...materialUnits.value
-  ].find(
-    item => item.studentLearningUnitId === unitId
+  const unit = materialUnits.value.find(
+    item => item.studentLearningUnitId === selectedMaterialUnitId.value
   )
-  return unit?.title ?? 'Unidade selecionada'
+  return unit?.title ?? 'Lição não selecionada'
 })
 const tutorContext = computed(
   () => ({
-    contextId: (
-      selectedMaterial.value?.studentLearningContextId
-      ?? selectedStudentLearningContextId.value
-    ),
-    subjectId: (
-      selectedMaterial.value?.studentSubjectId
-      ?? selectedStudentSubject.value?.studentSubjectId
-      ?? null
-    ),
-    unitId: tutorUnitId.value,
+    contextId: selectedMaterialContextId.value,
+    subjectId: selectedMaterialSubjectId.value,
+    unitId: selectedMaterialUnitId.value,
     title: [
       'Lia',
       selectedSubjectLabel.value !== 'Nenhuma selecionada'
         ? selectedSubjectLabel.value
         : null,
-      tutorUnitLabel.value !== 'Geral'
+      selectedMaterialUnitId.value
         ? tutorUnitLabel.value
         : null
     ].filter(Boolean).join(' · ')
@@ -762,11 +766,19 @@ const {
 watch(
   [activeSection, tutorContextKey],
   async ([section]) => {
-    if (
-      section !== 'LIA_TUTOR'
-      || !selectedStudent.value
-    ) {
+    if (section !== 'LIA_TUTOR' || !selectedStudent.value) {
       return
+    }
+    if (
+      !tutorContext.value.contextId
+      || !tutorContext.value.subjectId
+      || !tutorContext.value.unitId
+    ) {
+      resetAgentTutorWorkspace()
+      return
+    }
+    if (errorMessage.value.includes('AGENT_SCOPE_REQUIRED')) {
+      errorMessage.value = ''
     }
     try {
       await ensureContextThread(
@@ -782,7 +794,9 @@ watch(
 async function openPedagogicalFromTutor(
   artifactId: string
 ) {
-  await refreshPedagogicalArtifacts()
+  await refreshPedagogicalArtifacts(
+    activeLessonScope.value ?? undefined
+  )
   const artifact = pedagogicalArtifacts.value.find(
     item =>
       item.pedagogicalArtifactId === artifactId
