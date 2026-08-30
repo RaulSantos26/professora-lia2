@@ -28,6 +28,11 @@ export function usePedagogicalWorkspace(options: Options) {
   const busy = ref(false)
 
   let timer: number | null = null
+  let pollingScope: {
+    studentLearningContextId: string
+    studentSubjectId: string
+    studentLearningUnitId: string
+  } | null = null
 
   const activeArtifacts = computed(
     () => artifacts.value.filter(
@@ -51,7 +56,15 @@ export function usePedagogicalWorkspace(options: Options) {
       return
     }
 
-    artifacts.value = await api.listArtifacts(options.selectedStudent.value.studentId, { studentLearningContextId: scope.studentLearningContextId, studentSubjectId: scope.studentSubjectId, studentLearningUnitId: scope.studentLearningUnitId })
+    pollingScope = {
+      studentLearningContextId: scope.studentLearningContextId,
+      studentSubjectId: scope.studentSubjectId,
+      studentLearningUnitId: scope.studentLearningUnitId
+    }
+    artifacts.value = await api.listArtifacts(
+      options.selectedStudent.value.studentId,
+      pollingScope
+    )
 
     if (selectedArtifact.value) {
       selectedArtifact.value = (
@@ -176,6 +189,7 @@ export function usePedagogicalWorkspace(options: Options) {
   }
 
   function resetPedagogicalWorkspace() {
+    pollingScope = null
     stopPolling()
     artifacts.value = []
     selectedArtifact.value = null
@@ -190,7 +204,11 @@ export function usePedagogicalWorkspace(options: Options) {
     timer = window.setInterval(
       async () => {
         try {
-          await refreshArtifacts(scope)
+          if (!pollingScope) {
+            stopPolling()
+            return
+          }
+          await refreshArtifacts(pollingScope)
         } catch (error) {
           stopPolling()
           options.showError(error)
