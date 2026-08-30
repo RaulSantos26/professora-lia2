@@ -372,6 +372,7 @@ async function selectStudentLearningContext(
   try {
     studentSubjects.value =
       await studentContentApiService.listSubjects(studentLearningContextId)
+    await selectMaterialContext(studentLearningContextId)
   } catch (error) {
     showError(error)
   }
@@ -406,6 +407,7 @@ async function selectStudentSubject(subject: StudentSubjectContract) {
       await studentContentApiService.listLearningUnits(
         subject.studentSubjectId
       )
+    await selectMaterialSubject(subject.studentSubjectId)
     activeSection.value = 'LEARNING_UNIT'
   } catch (error) {
     showError(error)
