@@ -114,6 +114,18 @@ export function usePedagogicalWorkspace(options: Options) {
         ...artifacts.value
       ]
       selectedArtifact.value = artifact
+
+      if (
+        artifact.studentLearningContextId
+        && artifact.studentSubjectId
+        && artifact.studentLearningUnitId
+      ) {
+        pollingScope = {
+          studentLearningContextId: artifact.studentLearningContextId,
+          studentSubjectId: artifact.studentSubjectId,
+          studentLearningUnitId: artifact.studentLearningUnitId
+        }
+      }
       startPolling()
 
       options.setSuccess(
