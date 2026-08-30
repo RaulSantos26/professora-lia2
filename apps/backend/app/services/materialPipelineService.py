@@ -310,6 +310,17 @@ class MaterialPipelineService:
         material.lastProcessingErrorCode = None
         material.lastProcessingErrorMessage = None
 
+        if (
+            material.discardSourceAfterExtraction
+            and material.sourceFileRetained
+            and material.materialType == "IMAGE"
+            and pendingVision == 0
+        ):
+            self._retainExtractedTextOnly(
+                material=material,
+                versionId=version.documentVersionId,
+            )
+
         warnings = visionWarnings or embeddingWarnings
 
         self.jobRepository.complete(
@@ -394,6 +405,33 @@ class MaterialPipelineService:
         )
         self.session.commit()
 
+    def _retainExtractedTextOnly(
+        self,
+        *,
+        material,
+        versionId: UUID,
+    ) -> None:
+        fileModel = self.materialRepository.findActiveFile(
+            material.materialId
+        )
+
+        if fileModel is not None:
+            self.storage.remove(fileModel.storageKey)
+            fileModel.status = "SUPERSEDED"
+
+        for page in self.documentRepository.listPages(versionId):
+            for block in self.documentRepository.listBlocks(
+                page.documentPageId
+            ):
+                if block.assetStorageKey:
+                    block.assetStorageKey = None
+
+        self.storage.removeDerivedTree(
+            material.studentId,
+            material.materialId,
+        )
+        material.materialType = "TEXT"
+        material.sourceFileRetained = False
     def _processOcrBlock(
         self,
         *,

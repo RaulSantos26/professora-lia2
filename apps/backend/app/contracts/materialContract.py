@@ -21,6 +21,7 @@ class MaterialContract(BaseModel):
     status: Literal["UPLOADED","PROCESSING","PARTIAL","READY","ERROR","ARCHIVED"]
     analysisRequested: bool
     studyEnabled: bool
+    sourceFileRetained: bool = True
     requestedModelId: str | None
     aiMode: Literal["AUTO","FIXED","CUSTOM"] = "AUTO"
     fixedModelId: str | None = None

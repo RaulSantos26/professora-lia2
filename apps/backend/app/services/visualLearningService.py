@@ -74,6 +74,9 @@ class VisualLearningService:
         contextText, evidence, materialIds = self.context.build(
             studentId=studentId,
             materialIds=requestedMaterialIds,
+            studentLearningContextId=request.studentLearningContextId,
+            studentSubjectId=request.studentSubjectId,
+            studentLearningUnitId=request.studentLearningUnitId,
             focusQuery=request.instruction,
         )
 

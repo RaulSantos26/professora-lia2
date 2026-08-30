@@ -182,12 +182,28 @@ class TutorAgentHarness:
                 request={
                     "artifactType": artifactType,
                     "materialIds": actionMaterialIds,
+                    "studentLearningContextId": str(
+                        thread.studentLearningContextId
+                    ),
+                    "studentSubjectId": str(
+                        thread.studentSubjectId
+                    ),
+                    "studentLearningUnitId": str(
+                        thread.studentLearningUnitId
+                    ),
                 },
                 callback=lambda: self.pedagogicalTool.execute(
                     studentId=thread.studentId,
                     artifactType=str(artifactType),
                     instruction=userMessage.content,
                     materialIds=actionMaterialIds,
+                    studentLearningContextId=(
+                        thread.studentLearningContextId
+                    ),
+                    studentSubjectId=thread.studentSubjectId,
+                    studentLearningUnitId=(
+                        thread.studentLearningUnitId
+                    ),
                     requestedTextModelId=(
                         run.requestedTextModelId
                     ),
@@ -213,12 +229,28 @@ class TutorAgentHarness:
                 request={
                     "visualType": visualType,
                     "materialIds": actionMaterialIds,
+                    "studentLearningContextId": str(
+                        thread.studentLearningContextId
+                    ),
+                    "studentSubjectId": str(
+                        thread.studentSubjectId
+                    ),
+                    "studentLearningUnitId": str(
+                        thread.studentLearningUnitId
+                    ),
                 },
                 callback=lambda: self.visualTool.execute(
                     studentId=thread.studentId,
                     visualType=str(visualType),
                     instruction=userMessage.content,
                     materialIds=actionMaterialIds,
+                    studentLearningContextId=(
+                        thread.studentLearningContextId
+                    ),
+                    studentSubjectId=thread.studentSubjectId,
+                    studentLearningUnitId=(
+                        thread.studentLearningUnitId
+                    ),
                     requestedTextModelId=(
                         run.requestedTextModelId
                     ),

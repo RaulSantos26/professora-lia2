@@ -20,6 +20,7 @@ export interface MaterialContract {
   status: MaterialStatus
   analysisRequested: boolean
   studyEnabled: boolean
+  sourceFileRetained: boolean
   requestedModelId: string | null
   aiMode: 'AUTO' | 'FIXED' | 'CUSTOM'
   fixedModelId: string | null

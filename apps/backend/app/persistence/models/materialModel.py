@@ -111,6 +111,18 @@ class MaterialModel(BaseModel):
         nullable=False,
         default=True,
     )
+    sourceFileRetained: Mapped[bool] = mapped_column(
+        "source_file_retained",
+        Boolean,
+        nullable=False,
+        default=True,
+    )
+    discardSourceAfterExtraction: Mapped[bool] = mapped_column(
+        "discard_source_after_extraction",
+        Boolean,
+        nullable=False,
+        default=False,
+    )
     requestedModelId: Mapped[str | None] = mapped_column(
         "requested_model_id",
         String(300),

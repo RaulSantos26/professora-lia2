@@ -288,6 +288,10 @@ class MaterialAsyncService:
             ),
             analysisRequested=analysisRequested,
             studyEnabled=studyEnabled,
+            sourceFileRetained=True,
+            discardSourceAfterExtraction=(
+                materialType == "IMAGE"
+            ),
             requestedModelId=requestedModelId,
             aiMode=preference.mode,
             fixedModelId=preference.fixedModelId,

@@ -53,6 +53,7 @@ class OllamaClientService:
             "format": schema,
             "options": {
                 "temperature": 0,
+                "num_predict": -1,
             },
         }
 

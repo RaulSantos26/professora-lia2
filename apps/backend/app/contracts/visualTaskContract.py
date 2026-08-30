@@ -20,6 +20,9 @@ class VisualTaskCreateContract(BaseModel):
     ] = "VisualTaskCreate.v1"
 
     visualType: VisualTaskType
+    studentLearningContextId: UUID
+    studentSubjectId: UUID
+    studentLearningUnitId: UUID
     title: str | None = Field(default=None, max_length=250)
     instruction: str | None = Field(default=None, max_length=2000)
     materialIds: list[UUID] = Field(default_factory=list)

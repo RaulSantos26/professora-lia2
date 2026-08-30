@@ -426,7 +426,9 @@ function jobStatusClass(job: MaterialProcessingJobContract): string {
               <strong>{{ material.title }}</strong>
 
               <small>
-                {{ material.materialType }}
+                {{ material.sourceFileRetained
+                  ? material.materialType
+                  : 'TEXTO EXTRAÍDO' }}
                 · {{ material.status }}
                 <template v-if="material.sourceSequence">
                   · página {{ material.sourceSequence }}
@@ -482,6 +484,7 @@ function jobStatusClass(job: MaterialProcessingJobContract): string {
             </button>
 
             <button
+              v-if="material.sourceFileRetained"
               type="button"
               class="secondaryButton"
               :disabled="isMaterialProcessing(material.materialId)"
@@ -524,6 +527,7 @@ function jobStatusClass(job: MaterialProcessingJobContract): string {
             </button>
 
             <a
+              v-if="material.sourceFileRetained"
               class="secondaryButton materialActionLink"
               :href="`/api/materials/${material.materialId}/file`"
               target="_blank"

@@ -546,7 +546,11 @@ function openPedagogicalAction(
               />
               <span>
                 <strong>{{ material.title }}</strong>
-                <small>{{ material.materialType }}</small>
+                <small>
+                  {{ material.sourceFileRetained
+                    ? material.materialType
+                    : 'TEXTO EXTRAÍDO' }}
+                </small>
               </span>
             </label>
           </details>

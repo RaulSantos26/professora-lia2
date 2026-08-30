@@ -93,6 +93,16 @@ class MaterialService:
         mimeType = upload.content_type or "application/octet-stream"
         materialType = self._resolveMaterialType(fileName, mimeType)
 
+        if materialType == "IMAGE":
+            raise DomainError(
+                code="IMAGE_UPLOAD_REQUIRES_ASYNC_TEXT_PIPELINE",
+                message=(
+                    "Envie fotos pelo processamento assíncrono da Lia "
+                    "para preservar somente o texto extraído."
+                ),
+                httpStatus=409,
+            )
+
         material = MaterialModel(
             studentId=studentId,
             studentLearningContextId=studentLearningContextId,
