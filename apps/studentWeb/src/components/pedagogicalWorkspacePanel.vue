@@ -14,10 +14,16 @@ import type {
 import type {
   MaterialContract
 } from '../contracts/materialContract'
+import type { StudentSubjectContract } from '../contracts/studentSubjectContract'
+import type { StudentLearningUnitContract } from '../contracts/studentLearningUnitContract'
 
 const props = defineProps<{
   materials: MaterialContract[]
   selectedMaterial: MaterialContract | null
+  subjects: StudentSubjectContract[]
+  units: StudentLearningUnitContract[]
+  selectedSubjectId: string | null
+  selectedUnitId: string | null
   modelRegistry: AiModelRegistryContract | null
   artifacts: PedagogicalArtifactContract[]
   selectedArtifact: PedagogicalArtifactContract | null
@@ -37,6 +43,8 @@ const emit = defineEmits<{
     thinkingMode: 'AUTO' | 'ON' | 'OFF'
   }]
   select: [artifact: PedagogicalArtifactContract]
+  selectSubject: [subjectId: string]
+  selectUnit: [unitId: string]
   archive: [artifactId: string]
   submitAttempt: [
     artifactId: string,
@@ -181,6 +189,13 @@ watch(
   { immediate: true }
 )
 
+function selectSubject(event: Event) {
+  emit('selectSubject', (event.target as HTMLSelectElement).value)
+}
+function selectUnit(event: Event) {
+  emit('selectUnit', (event.target as HTMLSelectElement).value)
+}
+
 function selectAction(type: PedagogicalArtifactType) {
   artifactType.value = type
 }
@@ -234,6 +249,32 @@ function confirmArchive(artifact: PedagogicalArtifactContract) {
 
       <span class="countBadge">{{ artifacts.length }}</span>
     </header>
+
+    <section class="pedagogicalComposer">
+      <div class="pedagogicalSettingsGrid">
+        <label>
+          Matéria
+          <select :value="selectedSubjectId ?? ''" @change="selectSubject">
+            <option value="">Escolha a matéria</option>
+            <option v-for="subject in subjects" :key="subject.studentSubjectId" :value="subject.studentSubjectId">
+              {{ subject.name }}
+            </option>
+          </select>
+        </label>
+        <label>
+          Lição
+          <select :value="selectedUnitId ?? ''" :disabled="!selectedSubjectId" @change="selectUnit">
+            <option value="">Escolha a lição</option>
+            <option v-for="unit in units" :key="unit.studentLearningUnitId" :value="unit.studentLearningUnitId">
+              {{ unit.title }}
+            </option>
+          </select>
+        </label>
+      </div>
+      <p v-if="!selectedUnitId" class="emptyState">
+        Escolha uma matéria e uma lição para ver somente o conteúdo delas.
+      </p>
+    </section>
 
     <section
       v-if="activeArtifact"

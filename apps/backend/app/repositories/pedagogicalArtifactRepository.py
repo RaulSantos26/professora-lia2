@@ -41,6 +41,16 @@ class PedagogicalArtifactRepository:
         )
         return list(self.session.scalars(statement))
 
+    def listByStudentScope(self, studentId: UUID, contextId: UUID, subjectId: UUID, unitId: UUID, limit: int = 30) -> list[PedagogicalArtifactModel]:
+        statement = select(PedagogicalArtifactModel).where(
+            PedagogicalArtifactModel.studentId == studentId,
+            PedagogicalArtifactModel.studentLearningContextId == contextId,
+            PedagogicalArtifactModel.studentSubjectId == subjectId,
+            PedagogicalArtifactModel.studentLearningUnitId == unitId,
+            PedagogicalArtifactModel.status != "ARCHIVED",
+        ).order_by(PedagogicalArtifactModel.createdAt.desc()).limit(limit)
+        return list(self.session.scalars(statement))
+
     def listAllByStudent(
         self,
         studentId: UUID,

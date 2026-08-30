@@ -8,6 +8,7 @@ LearningGoalType = Literal["TEST","EXAM","REVIEW","PROJECT","COURSE","CERTIFICAT
 class LearningGoalCreateContract(BaseModel):
     contractName: Literal["LearningGoalCreate.v1"] = "LearningGoalCreate.v1"
     studentLearningContextId: UUID | None = None
+    studentSubjectId: UUID | None = None
     goalType: LearningGoalType = "OTHER"
     title: str = Field(min_length=2, max_length=250)
     description: str | None = Field(default=None, max_length=1500)
@@ -27,6 +28,7 @@ class LearningGoalContract(BaseModel):
     learningGoalId: UUID
     studentId: UUID
     studentLearningContextId: UUID | None
+    studentSubjectId: UUID | None
     goalType: LearningGoalType
     title: str
     description: str | None

@@ -6,9 +6,12 @@ import type {
   LearningGoalType
 } from '../contracts/learningGoalContract'
 import type { StudentLearningContextViewContract } from '../contracts/studentLearningContextContract'
+import type { StudentSubjectContract } from '../contracts/studentSubjectContract'
 
-defineProps<{
+const props = defineProps<{
   contexts: StudentLearningContextViewContract[]
+  subjects: StudentSubjectContract[]
+  selectedContextId: string | null
   goals: LearningGoalContract[]
   selectedGoalId: string | null
 }>()
@@ -20,7 +23,8 @@ const emit = defineEmits<{
 
 const goalType = ref<LearningGoalType>('TEST')
 const title = ref('')
-const contextId = ref('')
+const contextId = ref(props.selectedContextId ?? '')
+const subjectId = ref('')
 const targetDate = ref('')
 const priority = ref(3)
 const description = ref('')
@@ -31,6 +35,7 @@ function submit() {
   emit('create', {
     contractName: 'LearningGoalCreate.v1',
     studentLearningContextId: contextId.value || null,
+    studentSubjectId: subjectId.value || null,
     goalType: goalType.value,
     title: title.value.trim(),
     description: description.value.trim() || null,
@@ -41,6 +46,7 @@ function submit() {
   title.value = ''
   targetDate.value = ''
   description.value = ''
+  subjectId.value = ''
 }
 </script>
 
@@ -84,6 +90,20 @@ function submit() {
               :value="item.association.studentLearningContextId"
             >
               {{ item.context.name }}
+            </option>
+          </select>
+        </label>
+
+        <label>
+          Matéria
+          <select v-model="subjectId" required>
+            <option value="">Escolha a matéria</option>
+            <option
+              v-for="subject in subjects"
+              :key="subject.studentSubjectId"
+              :value="subject.studentSubjectId"
+            >
+              {{ subject.name }}
             </option>
           </select>
         </label>

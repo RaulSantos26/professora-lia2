@@ -63,7 +63,7 @@ class StudyScopeService:
     def addItem(self, studyScopeId: UUID, request: StudyScopeItemCreateContract) -> StudyScopeItemContract:
         scope = self._requireScope(studyScopeId)
         goal = self._requireGoal(scope.learningGoalId)
-        _, _, context = self.ownershipService.assertUnitBelongsToStudent(
+        _, subject, context = self.ownershipService.assertUnitBelongsToStudent(
             request.studentLearningUnitId,
             goal.studentId,
         )
@@ -75,6 +75,13 @@ class StudyScopeService:
             raise DomainError(
                 code="STUDY_SCOPE_CONTEXT_MISMATCH",
                 message="A unidade pertence a outro contexto do aluno.",
+                httpStatus=409,
+            )
+
+        if goal.studentSubjectId is None or subject.studentSubjectId != goal.studentSubjectId:
+            raise DomainError(
+                code="STUDY_SCOPE_SUBJECT_MISMATCH",
+                message="Um objetivo so pode reunir lições da materia escolhida.",
                 httpStatus=409,
             )
 
@@ -168,6 +175,12 @@ class StudyScopeService:
                 StudentLearningContextModel.studentLearningContextId == goal.studentLearningContextId
             )
 
+        if goal.studentSubjectId is None:
+            return []
+
+        statement = statement.where(
+            StudentSubjectModel.studentSubjectId == goal.studentSubjectId
+        )
         rows = self.session.execute(statement).mappings().all()
         return [
             StudyScopeCandidateContract(

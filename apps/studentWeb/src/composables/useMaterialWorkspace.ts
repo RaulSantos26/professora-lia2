@@ -503,9 +503,9 @@ export function useMaterialWorkspace(
           topK: 6,
           requestedModelId,
           thinkingMode,
-          studentLearningContextId: null,
-          studentSubjectId: null,
-          studentLearningUnitId: null,
+          studentLearningContextId: selectedMaterialContextId.value,
+          studentSubjectId: selectedMaterialSubjectId.value,
+          studentLearningUnitId: selectedMaterialUnitId.value,
           materialIds: (
             selectedOnly && selectedMaterial.value
               ? [selectedMaterial.value.materialId]

@@ -26,6 +26,7 @@ from app.services.capabilityRouterService import CapabilityRouterService
 from app.services.pedagogicalContextService import PedagogicalContextService
 from app.services.pedagogicalGenerationService import PedagogicalGenerationService
 from app.services.thinkingPolicyService import ThinkingPolicyService
+from app.services.studentContentOwnershipService import StudentContentOwnershipService
 
 
 class PedagogicalService:
@@ -42,6 +43,7 @@ class PedagogicalService:
         self.aiPreference = AiExecutionPreferenceService()
         self.modelRegistry = AiModelRegistryService()
         self.thinking = ThinkingPolicyService()
+        self.ownership = StudentContentOwnershipService(session)
 
     def createArtifact(
         self,
@@ -65,31 +67,21 @@ class PedagogicalService:
             )
 
         materials = self.materialRepository.listByStudentId(studentId)
-
-        if request.materialIds:
-            owned = {
-                material.materialId
-                for material in materials
-                if material.studyEnabled
-            }
-            missing = [
-                materialId
-                for materialId in request.materialIds
-                if materialId not in owned
-            ]
-
-            if missing:
-                raise DomainError(
-                    code="PEDAGOGICAL_MATERIAL_NOT_OWNED",
-                    message=(
-                        "Um material selecionado não pertence ao aluno "
-                        "ou está fora do estudo."
-                    ),
-                    httpStatus=409,
-                )
+        if not request.materialIds:
+            raise DomainError(code="PEDAGOGICAL_SCOPE_REQUIRED", message="Escolha uma lição e ao menos um material.", httpStatus=422)
+        owned = {item.materialId for item in materials if item.studyEnabled}
+        if any(item not in owned for item in request.materialIds):
+            raise DomainError(code="PEDAGOGICAL_MATERIAL_NOT_OWNED", message="Um material selecionado nao pertence ao aluno ou esta fora do estudo.", httpStatus=409)
+        contextId, subjectId, unitId = self._resolveMaterialScope(materials, request.materialIds)
+        requestedScope = (request.studentLearningContextId, request.studentSubjectId, request.studentLearningUnitId)
+        if any(value is not None for value in requestedScope) and requestedScope != (contextId, subjectId, unitId):
+            raise DomainError(code="PEDAGOGICAL_SCOPE_MISMATCH", message="Os materiais escolhidos nao pertencem a lição selecionada.", httpStatus=409)
 
         artifact = PedagogicalArtifactModel(
             studentId=studentId,
+            studentLearningContextId=contextId,
+            studentSubjectId=subjectId,
+            studentLearningUnitId=unitId,
             artifactType=request.artifactType,
             status="QUEUED",
             progressPercent=5,
@@ -127,16 +119,10 @@ class PedagogicalService:
 
         return self._toContract(artifact)
 
-    def listArtifacts(
-        self,
-        studentId: UUID,
-    ) -> list[PedagogicalArtifactContract]:
+    def listArtifacts(self, *, studentId: UUID, studentLearningContextId: UUID, studentSubjectId: UUID, studentLearningUnitId: UUID) -> list[PedagogicalArtifactContract]:
         self._requireStudent(studentId)
-
-        return [
-            self._toContract(model)
-            for model in self.repository.listByStudent(studentId)
-        ]
+        self._validateScope(studentId, studentLearningContextId, studentSubjectId, studentLearningUnitId)
+        return [self._toContract(model) for model in self.repository.listByStudentScope(studentId, studentLearningContextId, studentSubjectId, studentLearningUnitId)]
 
     def getArtifact(
         self,
@@ -181,6 +167,9 @@ class PedagogicalService:
         context, evidence, selectedIds = self.contextService.build(
             studentId=artifact.studentId,
             materialIds=materialIds,
+            studentLearningContextId=artifact.studentLearningContextId,
+            studentSubjectId=artifact.studentSubjectId,
+            studentLearningUnitId=artifact.studentLearningUnitId,
             focusQuery=artifact.instruction,
         )
 
@@ -366,6 +355,17 @@ class PedagogicalService:
             completedAt=attempt.completedAt,
         )
 
+    def _resolveMaterialScope(self, materials: list, materialIds: list[UUID]) -> tuple[UUID, UUID, UUID]:
+        scopes = {(item.studentLearningContextId, item.studentSubjectId, item.studentLearningUnitId) for item in materials if item.materialId in set(materialIds)}
+        if len(scopes) != 1 or any(value is None for value in next(iter(scopes), ())):
+            raise DomainError(code="PEDAGOGICAL_SCOPE_MISMATCH", message="Escolha materiais de uma unica lição.", httpStatus=409)
+        return next(iter(scopes))
+
+    def _validateScope(self, studentId: UUID, contextId: UUID, subjectId: UUID, unitId: UUID) -> None:
+        _, subject, context = self.ownership.assertUnitBelongsToStudent(unitId, studentId)
+        if subject.studentSubjectId != subjectId or context.studentLearningContextId != contextId:
+            raise DomainError(code="PEDAGOGICAL_SCOPE_MISMATCH", message="A lição nao pertence a materia selecionada.", httpStatus=409)
+
     def _resolveTextModel(
         self,
         artifact: PedagogicalArtifactModel,
@@ -423,6 +423,9 @@ class PedagogicalService:
         return PedagogicalArtifactContract(
             pedagogicalArtifactId=model.pedagogicalArtifactId,
             studentId=model.studentId,
+            studentLearningContextId=model.studentLearningContextId,
+            studentSubjectId=model.studentSubjectId,
+            studentLearningUnitId=model.studentLearningUnitId,
             artifactType=model.artifactType,
             status=model.status,
             progressPercent=model.progressPercent,

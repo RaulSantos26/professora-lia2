@@ -22,6 +22,9 @@ class PedagogicalArtifactCreateContract(BaseModel):
     ] = "PedagogicalArtifactCreate.v1"
 
     artifactType: PedagogicalArtifactType
+    studentLearningContextId: UUID | None = None
+    studentSubjectId: UUID | None = None
+    studentLearningUnitId: UUID | None = None
     title: str | None = Field(default=None, max_length=250)
     instruction: str | None = Field(default=None, max_length=2000)
     materialIds: list[UUID] = Field(default_factory=list)
@@ -51,6 +54,9 @@ class PedagogicalArtifactContract(BaseModel):
 
     pedagogicalArtifactId: UUID
     studentId: UUID
+    studentLearningContextId: UUID | None
+    studentSubjectId: UUID | None
+    studentLearningUnitId: UUID | None
     artifactType: PedagogicalArtifactType
     status: Literal[
         "QUEUED",

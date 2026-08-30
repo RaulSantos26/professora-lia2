@@ -624,6 +624,19 @@ const {
     errorMessage.value = message
   }
 })
+const activeLessonScope = computed(
+  () => (
+    selectedMaterialContextId.value
+    && selectedMaterialSubjectId.value
+    && selectedMaterialUnitId.value
+      ? {
+          studentLearningContextId: selectedMaterialContextId.value,
+          studentSubjectId: selectedMaterialSubjectId.value,
+          studentLearningUnitId: selectedMaterialUnitId.value
+        }
+      : null
+  )
+)
 const materialsForSelectedLesson = computed(
   () => materials.value.filter(material => {
     if (
@@ -675,6 +688,15 @@ const {
     successMessage.value = message
   }
 })
+watch(
+  [activeSection, activeLessonScope],
+  async ([section, scope]) => {
+    if (section !== 'PEDAGOGICAL') return
+    await refreshPedagogicalArtifacts(scope ?? undefined)
+  },
+  { immediate: true }
+)
+
 const tutorUnitId = computed(
   () => selectedMaterial.value?.studentLearningUnitId ?? null
 )
@@ -985,6 +1007,10 @@ onMounted(async () => {
         "
         :materials="materialsForSelectedLesson"
         :selected-material="selectedMaterial"
+        :subjects="materialSubjects"
+        :units="materialUnits"
+        :selected-subject-id="selectedMaterialSubjectId"
+        :selected-unit-id="selectedMaterialUnitId"
         :model-registry="aiModelRegistry"
         :artifacts="pedagogicalArtifacts"
         :selected-artifact="selectedPedagogicalArtifact"
@@ -992,6 +1018,8 @@ onMounted(async () => {
         :busy="pedagogicalBusy"
         @create="createPedagogicalArtifact"
         @select="selectPedagogicalArtifact"
+        @select-subject="selectMaterialSubject"
+        @select-unit="selectMaterialUnit"
         @archive="archivePedagogicalArtifact"
         @submit-attempt="submitPedagogicalAttempt"
       />
@@ -1005,9 +1033,15 @@ onMounted(async () => {
         :visual-tasks="tutorVisualTasks"
         :materials="materialsForSelectedLesson"
         :selected-material="selectedMaterial"
+        :subjects="materialSubjects"
+        :units="materialUnits"
+        :selected-subject-id="selectedMaterialSubjectId"
+        :selected-unit-id="selectedMaterialUnitId"
         :model-registry="aiModelRegistry"
         :busy="tutorBusy"
         @select-thread="selectTutorThread"
+        @select-subject="selectMaterialSubject"
+        @select-unit="selectMaterialUnit"
         @send="sendTutorMessage"
         @retry-last-run="retryTutorRun"
         @archive-thread="archiveTutorThread"
@@ -1019,6 +1053,8 @@ onMounted(async () => {
           && selectedStudent
         "
         :contexts="assignedContexts"
+        :subjects="studentSubjects"
+        :selected-context-id="selectedStudentLearningContextId"
         :goals="learningGoals"
         :selected-goal-id="
           selectedLearningGoal?.learningGoalId ?? null

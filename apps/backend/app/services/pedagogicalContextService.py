@@ -23,6 +23,9 @@ class PedagogicalContextService:
         *,
         studentId: UUID,
         materialIds: list[UUID],
+        studentLearningContextId: UUID | None,
+        studentSubjectId: UUID | None,
+        studentLearningUnitId: UUID | None,
         focusQuery: str | None = None,
     ) -> tuple[str, list[dict], list[UUID]]:
         materials = self.materialRepository.listByStudentId(studentId)
@@ -53,9 +56,9 @@ class PedagogicalContextService:
 
         candidates = self.ragRepository.listCandidates(
             studentId=studentId,
-            studentLearningContextId=None,
-            studentSubjectId=None,
-            studentLearningUnitId=None,
+            studentLearningContextId=studentLearningContextId,
+            studentSubjectId=studentSubjectId,
+            studentLearningUnitId=studentLearningUnitId,
             materialIds=selectedIds,
         )
 
@@ -68,6 +71,23 @@ class PedagogicalContextService:
                 ),
                 httpStatus=409,
             )
+
+        # A transcription verified by Vision supersedes noisy local OCR for
+        # the same material. Keep local OCR only as a fallback.
+        visionMaterialIds = {
+            item.materialId
+            for item in candidates
+            if item.locator.startswith("Vision/OCR")
+            and len(item.content.strip()) >= 80
+        }
+        candidates = [
+            item
+            for item in candidates
+            if not (
+                item.materialId in visionMaterialIds
+                and item.locator.startswith("OCR local")
+            )
+        ]
 
         if focusQuery and focusQuery.strip():
             candidates = self._semanticOrder(

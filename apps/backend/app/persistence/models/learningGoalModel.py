@@ -16,6 +16,7 @@ class LearningGoalModel(BaseModel):
     learningGoalId: Mapped[UUID] = mapped_column("learning_goal_id", PostgresUuid(as_uuid=True), primary_key=True, default=uuid4)
     studentId: Mapped[UUID] = mapped_column("student_id", PostgresUuid(as_uuid=True), ForeignKey("lia2.student.student_id", ondelete="RESTRICT"), nullable=False, index=True)
     studentLearningContextId: Mapped[UUID | None] = mapped_column("student_learning_context_id", PostgresUuid(as_uuid=True), ForeignKey("lia2.student_learning_context.student_learning_context_id", ondelete="RESTRICT"), nullable=True, index=True)
+    studentSubjectId: Mapped[UUID | None] = mapped_column("student_subject_id", PostgresUuid(as_uuid=True), ForeignKey("lia2.student_subject.student_subject_id", ondelete="RESTRICT"), nullable=True, index=True)
     goalType: Mapped[str] = mapped_column("goal_type", String(30), nullable=False)
     title: Mapped[str] = mapped_column(String(250), nullable=False)
     description: Mapped[str | None] = mapped_column(String(1500), nullable=True)

@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.contracts.agentTutorContract import (
@@ -46,13 +46,17 @@ def createThread(
 )
 def listThreads(
     studentId: UUID,
-    session: Session = Depends(
-        getDatabaseSession
-    ),
+    studentLearningContextId: UUID = Query(...),
+    studentSubjectId: UUID = Query(...),
+    studentLearningUnitId: UUID = Query(...),
+    session: Session = Depends(getDatabaseSession),
 ) -> list[AgentThreadContract]:
-    return AgentTutorService(
-        session
-    ).listThreads(studentId)
+    return AgentTutorService(session).listThreads(
+        studentId=studentId,
+        studentLearningContextId=studentLearningContextId,
+        studentSubjectId=studentSubjectId,
+        studentLearningUnitId=studentLearningUnitId,
+    )
 
 
 @router.get(

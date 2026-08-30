@@ -37,15 +37,11 @@ class AgentTutorService:
         request: AgentThreadCreateContract,
     ) -> AgentThreadContract:
         self._requireStudent(studentId)
-        self._validateContextOwnership(
+        self._validateRequiredScope(
             studentId=studentId,
-            studentLearningContextId=(
-                request.studentLearningContextId
-            ),
+            studentLearningContextId=request.studentLearningContextId,
             studentSubjectId=request.studentSubjectId,
-            studentLearningUnitId=(
-                request.studentLearningUnitId
-            ),
+            studentLearningUnitId=request.studentLearningUnitId,
         )
 
         thread = AgentThreadModel(
@@ -73,13 +69,26 @@ class AgentTutorService:
 
     def listThreads(
         self,
+        *,
         studentId: UUID,
+        studentLearningContextId: UUID,
+        studentSubjectId: UUID,
+        studentLearningUnitId: UUID,
     ) -> list[AgentThreadContract]:
         self._requireStudent(studentId)
+        self._validateRequiredScope(
+            studentId=studentId,
+            studentLearningContextId=studentLearningContextId,
+            studentSubjectId=studentSubjectId,
+            studentLearningUnitId=studentLearningUnitId,
+        )
         return [
             self._threadContract(thread)
-            for thread in self.repository.listThreads(
-                studentId
+            for thread in self.repository.listThreadsByScope(
+                studentId,
+                studentLearningContextId,
+                studentSubjectId,
+                studentLearningUnitId,
             )
         ]
 
@@ -147,6 +156,7 @@ class AgentTutorService:
         materialIds = self._validateMaterials(
             studentId,
             request.materialIds,
+            thread,
         )
 
         userMessage = AgentMessageModel(
@@ -297,6 +307,31 @@ class AgentTutorService:
         )
         self.session.commit()
 
+    def _validateRequiredScope(
+        self,
+        *,
+        studentId: UUID,
+        studentLearningContextId: UUID | None,
+        studentSubjectId: UUID | None,
+        studentLearningUnitId: UUID | None,
+    ) -> None:
+        if (
+            studentLearningContextId is None
+            or studentSubjectId is None
+            or studentLearningUnitId is None
+        ):
+            raise DomainError(
+                code="AGENT_SCOPE_REQUIRED",
+                message="Escolha uma matéria e uma lição antes de conversar com a Lia.",
+                httpStatus=422,
+            )
+        self._validateContextOwnership(
+            studentId=studentId,
+            studentLearningContextId=studentLearningContextId,
+            studentSubjectId=studentSubjectId,
+            studentLearningUnitId=studentLearningUnitId,
+        )
+
     def _validateContextOwnership(
         self,
         *,
@@ -439,18 +474,20 @@ class AgentTutorService:
         self,
         studentId: UUID,
         materialIds: list[UUID],
+        thread: AgentThreadModel,
     ) -> list[UUID]:
         if not materialIds:
             return []
 
         owned = {
             material.materialId
-            for material in (
-                self.materialRepository.listByStudentId(
-                    studentId
-                )
+            for material in self.materialRepository.listByStudentId(studentId)
+            if (
+                material.studyEnabled
+                and material.studentLearningContextId == thread.studentLearningContextId
+                and material.studentSubjectId == thread.studentSubjectId
+                and material.studentLearningUnitId == thread.studentLearningUnitId
             )
-            if material.studyEnabled
         }
 
         missing = [

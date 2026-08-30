@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.contracts.pedagogicalContract import (
@@ -41,9 +41,17 @@ def createPedagogicalArtifact(
 )
 def listPedagogicalArtifacts(
     studentId: UUID,
+    studentLearningContextId: UUID = Query(...),
+    studentSubjectId: UUID = Query(...),
+    studentLearningUnitId: UUID = Query(...),
     session: Session = Depends(getDatabaseSession),
 ) -> list[PedagogicalArtifactContract]:
-    return PedagogicalService(session).listArtifacts(studentId)
+    return PedagogicalService(session).listArtifacts(
+        studentId=studentId,
+        studentLearningContextId=studentLearningContextId,
+        studentSubjectId=studentSubjectId,
+        studentLearningUnitId=studentLearningUnitId,
+    )
 
 
 @router.get(

@@ -47,6 +47,26 @@ class AgentTutorRepository:
         )
         return list(self.session.scalars(statement))
 
+    def listThreadsByScope(
+        self,
+        studentId: UUID,
+        contextId: UUID,
+        subjectId: UUID,
+        unitId: UUID,
+        limit: int = 50,
+    ) -> list[AgentThreadModel]:
+        statement = select(AgentThreadModel).where(
+            AgentThreadModel.studentId == studentId,
+            AgentThreadModel.status == "ACTIVE",
+            AgentThreadModel.studentLearningContextId == contextId,
+            AgentThreadModel.studentSubjectId == subjectId,
+            AgentThreadModel.studentLearningUnitId == unitId,
+        ).order_by(
+            AgentThreadModel.lastMessageAt.desc().nullslast(),
+            AgentThreadModel.updatedAt.desc(),
+        ).limit(limit)
+        return list(self.session.scalars(statement))
+
     def createMessage(
         self,
         model: AgentMessageModel,

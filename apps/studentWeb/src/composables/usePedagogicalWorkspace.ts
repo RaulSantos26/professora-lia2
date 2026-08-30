@@ -37,7 +37,13 @@ export function usePedagogicalWorkspace(options: Options) {
     )
   )
 
-  async function refreshArtifacts() {
+  async function refreshArtifacts(scope?: { studentLearningContextId: string | null; studentSubjectId: string | null; studentLearningUnitId: string | null }) {
+    if (!options.selectedStudent.value || !scope?.studentLearningContextId || !scope.studentSubjectId || !scope.studentLearningUnitId) {
+      artifacts.value = []
+      selectedArtifact.value = null
+      stopPolling()
+      return
+    }
     if (!options.selectedStudent.value) {
       artifacts.value = []
       selectedArtifact.value = null
@@ -45,9 +51,7 @@ export function usePedagogicalWorkspace(options: Options) {
       return
     }
 
-    artifacts.value = await api.listArtifacts(
-      options.selectedStudent.value.studentId
-    )
+    artifacts.value = await api.listArtifacts(options.selectedStudent.value.studentId, { studentLearningContextId: scope.studentLearningContextId, studentSubjectId: scope.studentSubjectId, studentLearningUnitId: scope.studentLearningUnitId })
 
     if (selectedArtifact.value) {
       selectedArtifact.value = (
@@ -165,7 +169,6 @@ export function usePedagogicalWorkspace(options: Options) {
         selectedArtifact.value = null
       }
 
-      await refreshArtifacts()
       options.setSuccess('Conteúdo removido do histórico de estudo.')
     } catch (error) {
       options.showError(error)
@@ -187,7 +190,7 @@ export function usePedagogicalWorkspace(options: Options) {
     timer = window.setInterval(
       async () => {
         try {
-          await refreshArtifacts()
+          await refreshArtifacts(scope)
         } catch (error) {
           stopPolling()
           options.showError(error)

@@ -523,12 +523,6 @@ class MaterialPipelineService:
             block.assetStorageKey
         )
 
-        result = self.vision.analyze(
-            imagePath=assetPath,
-            modelId=modelId,
-            thinkingEnabled=thinkingEnabled,
-        )
-
         existingStructured = (
             block.structuredData
             if isinstance(block.structuredData, dict)
@@ -541,6 +535,13 @@ class MaterialPipelineService:
             ).get("text")
             or ""
         ).strip()
+
+        result = self.vision.analyze(
+            imagePath=assetPath,
+            modelId=modelId,
+            thinkingEnabled=thinkingEnabled,
+            ocrHint=ocrText,
+        )
 
         previousOrientation = int(
             block.orientationDegrees or 0
@@ -583,7 +584,7 @@ class MaterialPipelineService:
             versionId
         )
 
-        if result.extractedText.strip() and not ocrText:
+        if result.extractedText.strip():
             textEvidence = EvidenceModel(
                 studentId=material.studentId,
                 materialId=material.materialId,

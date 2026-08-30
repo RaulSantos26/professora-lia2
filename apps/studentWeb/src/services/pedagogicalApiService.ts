@@ -34,10 +34,16 @@ export class PedagogicalApiService {
   }
 
   async listArtifacts(
-    studentId: string
+    studentId: string,
+    scope: {
+      studentLearningContextId: string
+      studentSubjectId: string
+      studentLearningUnitId: string
+    }
   ): Promise<PedagogicalArtifactContract[]> {
+    const query = new URLSearchParams(scope).toString()
     return await this.request<PedagogicalArtifactContract[]>(
-      `/api/students/${studentId}/pedagogical/artifacts`
+      '/api/students/' + studentId + '/pedagogical/artifacts?' + query
     )
   }
 

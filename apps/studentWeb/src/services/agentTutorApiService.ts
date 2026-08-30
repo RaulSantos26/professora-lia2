@@ -28,10 +28,16 @@ export class AgentTutorApiService {
   }
 
   async listThreads(
-    studentId: string
+    studentId: string,
+    scope: {
+      studentLearningContextId: string
+      studentSubjectId: string
+      studentLearningUnitId: string
+    }
   ): Promise<AgentThreadContract[]> {
+    const query = new URLSearchParams(scope).toString()
     return await this.request<AgentThreadContract[]>(
-      `/api/students/${studentId}/lia/threads`
+      '/api/students/' + studentId + '/lia/threads?' + query
     )
   }
 

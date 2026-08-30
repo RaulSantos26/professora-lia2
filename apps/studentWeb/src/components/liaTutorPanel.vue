@@ -19,6 +19,8 @@ import type {
 import type {
   MaterialContract
 } from '../contracts/materialContract'
+import type { StudentSubjectContract } from '../contracts/studentSubjectContract'
+import type { StudentLearningUnitContract } from '../contracts/studentLearningUnitContract'
 import type {
   VisualTaskContract
 } from '../contracts/visualTaskContract'
@@ -29,12 +31,18 @@ const props = defineProps<{
   visualTasks: Record<string, VisualTaskContract>
   materials: MaterialContract[]
   selectedMaterial: MaterialContract | null
+  subjects: StudentSubjectContract[]
+  units: StudentLearningUnitContract[]
+  selectedSubjectId: string | null
+  selectedUnitId: string | null
   modelRegistry: AiModelRegistryContract | null
   busy: boolean
 }>()
 
 const emit = defineEmits<{
   selectThread: [thread: AgentThreadContract]
+  selectSubject: [subjectId: string]
+  selectUnit: [unitId: string]
   send: [request: {
     content: string
     requestedTextModelId: string | null
@@ -162,6 +170,13 @@ watch(
   }
 )
 
+function selectSubject(event: Event) {
+  emit('selectSubject', (event.target as HTMLSelectElement).value)
+}
+function selectUnit(event: Event) {
+  emit('selectUnit', (event.target as HTMLSelectElement).value)
+}
+
 function submit() {
   const content = message.value.trim()
 
@@ -227,6 +242,32 @@ function openPedagogicalAction(
       </span>
     </header>
 
+    <section class="pedagogicalComposer">
+      <div class="pedagogicalSettingsGrid">
+        <label>
+          Matéria
+          <select :value="selectedSubjectId ?? ''" @change="selectSubject">
+            <option value="">Escolha a matéria</option>
+            <option v-for="subject in subjects" :key="subject.studentSubjectId" :value="subject.studentSubjectId">
+              {{ subject.name }}
+            </option>
+          </select>
+        </label>
+        <label>
+          Lição
+          <select :value="selectedUnitId ?? ''" :disabled="!selectedSubjectId" @change="selectUnit">
+            <option value="">Escolha a lição</option>
+            <option v-for="unit in units" :key="unit.studentLearningUnitId" :value="unit.studentLearningUnitId">
+              {{ unit.title }}
+            </option>
+          </select>
+        </label>
+      </div>
+      <p v-if="!selectedUnitId" class="emptyState">
+        Escolha uma matéria e uma lição para ver somente o conteúdo delas.
+      </p>
+    </section>
+
     <section
       v-if="activeRun"
       class="agentRunProgress"
@@ -288,7 +329,7 @@ function openPedagogicalAction(
           class="dangerButton archiveConversationButton"
           @click="emit('archiveThread')"
         >
-          Arquivar conversa
+          Excluir conversa do histórico
         </button>
       </aside>
 

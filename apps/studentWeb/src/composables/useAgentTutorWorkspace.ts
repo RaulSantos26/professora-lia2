@@ -57,14 +57,18 @@ export function useAgentTutorWorkspace(
     () => conversation.value?.activeRun ?? null
   )
 
-  async function loadThreads() {
-    if (!options.selectedStudent.value) {
+  async function loadThreads(context?: TutorContext) {
+    if (!options.selectedStudent.value || !context?.contextId || !context.subjectId || !context.unitId) {
       threads.value = []
       return
     }
-
     threads.value = await api.listThreads(
-      options.selectedStudent.value.studentId
+      options.selectedStudent.value.studentId,
+      {
+        studentLearningContextId: context.contextId,
+        studentSubjectId: context.subjectId,
+        studentLearningUnitId: context.unitId
+      }
     )
   }
 
@@ -76,7 +80,7 @@ export function useAgentTutorWorkspace(
       return
     }
 
-    await loadThreads()
+    await loadThreads(context)
 
     const matching = threads.value.find(
       thread =>
@@ -211,7 +215,12 @@ export function useAgentTutorWorkspace(
 
       lastActiveRunId = null
       await Promise.all([
-        loadThreads(),
+        loadThreads({
+          contextId: conversation.value.thread.studentLearningContextId,
+          subjectId: conversation.value.thread.studentSubjectId,
+          unitId: conversation.value.thread.studentLearningUnitId,
+          title: conversation.value.thread.title
+        }),
         options.refreshGuide?.() ?? Promise.resolve(),
         options.refreshWorkspaceSummary?.() ?? Promise.resolve()
       ])
@@ -266,7 +275,12 @@ export function useAgentTutorWorkspace(
       )
       conversation.value = null
       visualTasks.value = {}
-      await loadThreads()
+      await loadThreads({
+        contextId: conversation.value?.thread.studentLearningContextId ?? null,
+        subjectId: conversation.value?.thread.studentSubjectId ?? null,
+        unitId: conversation.value?.thread.studentLearningUnitId ?? null,
+        title: ''
+      })
       options.setSuccess('Conversa arquivada.')
     } catch (error) {
       options.showError(error)
