@@ -13,6 +13,7 @@ from app.repositories.imageGenerationRepository import ImageGenerationRepository
 from app.repositories.studentRepository import StudentRepository
 from app.services.contentGuardService import ContentGuardService
 from app.services.pedagogicalContextService import PedagogicalContextService
+from app.services.studentContentOwnershipService import StudentContentOwnershipService
 
 
 class ImageGenerationService:
@@ -22,6 +23,7 @@ class ImageGenerationService:
         self.studentRepository = StudentRepository(session)
         self.context = PedagogicalContextService(session)
         self.contentGuard = ContentGuardService()
+        self.ownership = StudentContentOwnershipService(session)
         self.assetPath = Path(os.getenv("LIA2_IMAGE_ASSET_PATH", "/var/lib/lia2-generated-images"))
 
     def create(
@@ -40,12 +42,16 @@ class ImageGenerationService:
             studentLearningUnitId=studentLearningUnitId,
             focusQuery=instruction,
         )
+        learningContext = self._learningContext(
+            studentId,
+            studentLearningUnitId,
+        )
         title = self._title(instruction, imageMode)
-        labels = self._labels(evidence, imageMode)
+        labels = self._labels(instruction, learningContext)
         model = ImageGenerationTaskModel(
             studentId=studentId, agentThreadId=agentThreadId, agentRunId=agentRunId,
             relatedVisualTaskId=relatedVisualTaskId, imageMode=imageMode,
-            title=title, prompt=self._prompt(instruction, imageMode, evidence),
+            title=title, prompt=self._prompt(instruction, imageMode, evidence, learningContext),
             labelsJson=labels, evidenceJson=evidence,
             sourceMaterialIds=[str(value) for value in selectedIds],
         )
@@ -74,6 +80,10 @@ class ImageGenerationService:
             return existing
 
         instruction = artifact.instruction or artifact.title
+        learningContext = self._learningContext(
+            artifact.studentId,
+            artifact.studentLearningUnitId,
+        )
         model = ImageGenerationTaskModel(
             studentId=artifact.studentId,
             agentThreadId=None,
@@ -82,8 +92,8 @@ class ImageGenerationService:
             relatedPedagogicalArtifactId=artifact.pedagogicalArtifactId,
             imageMode="MIND_MAP_COMPANION",
             title=self._title(instruction, "MIND_MAP_COMPANION"),
-            prompt=self._prompt(instruction, "MIND_MAP_COMPANION", evidence),
-            labelsJson=self._labels(evidence, "MIND_MAP_COMPANION"),
+            prompt=self._prompt(instruction, "MIND_MAP_COMPANION", evidence, learningContext),
+            labelsJson=self._labels(instruction, learningContext),
             evidenceJson=evidence,
             sourceMaterialIds=list(artifact.sourceMaterialIds or []),
         )
@@ -108,31 +118,62 @@ class ImageGenerationService:
         cleaned = " ".join(instruction.split()).rstrip(".?!")
         return f"{prefix}: {cleaned[:180]}" if cleaned else prefix
 
-    def _labels(self, evidence: list[dict], imageMode: str) -> list[str]:
-        if imageMode == "MIND_MAP_COMPANION":
-            return ["Ideia central", "Relações principais", "Conceitos da lição"]
-        labels: list[str] = []
-        for item in evidence[:3]:
-            text = " ".join(str(item.get("excerpt") or "").split())
-            if text:
-                labels.append(text[:58].rstrip(".,;:"))
+    def _learningContext(
+        self,
+        studentId: UUID,
+        studentLearningUnitId: UUID,
+    ) -> dict[str, str]:
+        unit, subject, _ = self.ownership.assertUnitBelongsToStudent(
+            studentLearningUnitId,
+            studentId,
+        )
+        return {
+            "subject": " ".join(subject.name.split())[:120],
+            "lesson": " ".join(unit.title.split())[:180],
+        }
+
+    def _labels(
+        self,
+        instruction: str,
+        learningContext: dict[str, str],
+    ) -> list[str]:
+        topic = " ".join(instruction.split()).rstrip(".?!")[:180]
+        labels = [
+            f"Matéria: {learningContext['subject']}",
+            f"Lição: {learningContext['lesson']}",
+        ]
+        if topic:
+            labels.append(f"Explicação visual: {topic}")
         return labels
 
-    def _prompt(self, instruction: str, imageMode: str, evidence: list[dict]) -> str:
+    def _prompt(
+        self,
+        instruction: str,
+        imageMode: str,
+        evidence: list[dict],
+        learningContext: dict[str, str],
+    ) -> str:
         safeEvidence = []
         for item in evidence[:4]:
             protected = self.contentGuard.protect(str(item.get("excerpt") or ""))
             if protected.classification == "UNTRUSTED_CONTENT":
-                safeEvidence.append(" ".join(str(item.get("excerpt") or "").split())[:450])
+                safeEvidence.append(
+                    " ".join(str(item.get("excerpt") or "").split())[:450]
+                )
         mode = (
-            "an illustrated companion for an interactive mind map, with clear visual groups and no written words"
+            "a single concrete visual companion for an interactive mind map"
             if imageMode == "MIND_MAP_COMPANION"
-            else "a concrete, accurate educational illustration"
+            else "a single concrete and accurate educational illustration"
         )
         return (
-            f"Create {mode} about: {' '.join(instruction.split())[:1200]}. "
-            "Use recognizable real objects and subject-specific elements, clean composition, "
-            "Brazilian classroom visual quality, no letters, no labels, no watermark, no logo. "
+            f"Create {mode}. Brazilian school subject: {learningContext['subject']}. "
+            f"Current lesson: {learningContext['lesson']}. "
+            f"Required topic: {' '.join(instruction.split())[:1200]}. "
+            "Use recognizable subject-specific objects and a clean classroom composition. "
+            "CRITICAL: render absolutely no text of any kind inside the image: "
+            "no letters, words, labels, captions, titles, legends, numbers, maps with names, "
+            "diagrams with annotations, watermark or logo. The LIA interface renders the "
+            "Portuguese-Brazil explanation outside the image. "
             f"Reference facts: {' | '.join(safeEvidence)[:1600]}"
         )
 

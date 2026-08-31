@@ -140,10 +140,9 @@ class ZImageRuntime:
 
                 job.status = "LABELING"
                 job.progressPercent = 82
-                job.message = "Aplicando título e legendas em português."
-                composed = self._composeLabels(image, job.request.title, job.request.labels)
+                job.message = "Finalizando a imagem sem textos gerados por IA."
                 filename = f"{job.request.requestId}.png"
-                composed.save(self.outputPath / filename, format="PNG")
+                image.convert("RGB").save(self.outputPath / filename, format="PNG")
                 job.assetFilename = filename
                 job.status = "READY"
                 job.progressPercent = 100
@@ -159,30 +158,6 @@ class ZImageRuntime:
                 logger.exception("Image generation failed requestId=%s", job.request.requestId)
             finally:
                 self.busy = False
-
-    def _composeLabels(self, image, title: str, labels: list[str]):
-        from PIL import ImageDraw, ImageFont
-
-        composed = image.convert("RGBA")
-        draw = ImageDraw.Draw(composed, "RGBA")
-        fontPath = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
-        titleFont = ImageFont.truetype(fontPath, 24)
-        labelFont = ImageFont.truetype(fontPath, 16)
-        margin = 16
-        draw.rounded_rectangle((margin, margin, composed.width - margin, margin + 42), radius=10, fill=(12, 30, 58, 220))
-        draw.text((margin + 12, margin + 8), title.strip()[:120], font=titleFont, fill="white")
-        cleaned = [" ".join(item.split())[:70] for item in labels if item.strip()]
-        if not cleaned:
-            return composed.convert("RGB")
-        footerHeight = 36 + ((len(cleaned) - 1) // 3) * 28
-        yStart = composed.height - footerHeight - margin
-        draw.rounded_rectangle((margin, yStart, composed.width - margin, composed.height - margin), radius=10, fill=(255, 255, 255, 224))
-        columnWidth = (composed.width - (2 * margin) - 28) // 3
-        for index, label in enumerate(cleaned):
-            x = margin + 14 + (index % 3) * columnWidth
-            y = yStart + 10 + (index // 3) * 28
-            draw.text((x, y), f"• {label}", font=labelFont, fill=(20, 43, 71))
-        return composed.convert("RGB")
 
 
 class ImageJobCoordinator:
