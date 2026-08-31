@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 from uuid import UUID
 
@@ -141,10 +142,27 @@ class ImageGenerationService:
         labels = [
             f"Matéria: {learningContext['subject']}",
             f"Lição: {learningContext['lesson']}",
+            f"Explicação visual: {topic}" if topic else "Explicação visual da lição",
         ]
-        if topic:
-            labels.append(f"Explicação visual: {topic}")
-        return labels
+        if "relevo" in f"{learningContext['lesson']} {topic}".casefold():
+            labels.extend(
+                [
+                    "Montanhas|Grandes elevações do terreno",
+                    "Planaltos|Áreas elevadas, com superfície mais ou menos plana",
+                    "Planícies|Áreas baixas e planas",
+                    "Vales|Áreas alongadas entre elevações",
+                    "Depressões|Áreas mais baixas que o entorno",
+                ]
+            )
+        return labels[:8]
+
+    def _visualFact(self, excerpt: str) -> str:
+        """Keep semantic facts, never source labels or infographic instructions."""
+        text = " ".join(excerpt.split())
+        text = re.split(r"(?i)\b(rótulos?|labels?|legenda)\s*:", text)[0].strip()
+        if re.search(r"(?i)\b(diagrama|mapa|gráfico|tabela|figura)\b", text):
+            return ""
+        return text[:420]
 
     def _prompt(
         self,
@@ -157,9 +175,9 @@ class ImageGenerationService:
         for item in evidence[:4]:
             protected = self.contentGuard.protect(str(item.get("excerpt") or ""))
             if protected.classification == "UNTRUSTED_CONTENT":
-                safeEvidence.append(
-                    " ".join(str(item.get("excerpt") or "").split())[:450]
-                )
+                visualFact = self._visualFact(str(item.get("excerpt") or ""))
+                if visualFact:
+                    safeEvidence.append(visualFact)
         mode = (
             "a single concrete visual companion for an interactive mind map"
             if imageMode == "MIND_MAP_COMPANION"
@@ -169,12 +187,13 @@ class ImageGenerationService:
             f"Create {mode}. Brazilian school subject: {learningContext['subject']}. "
             f"Current lesson: {learningContext['lesson']}. "
             f"Required topic: {' '.join(instruction.split())[:1200]}. "
-            "Use recognizable subject-specific objects and a clean classroom composition. "
+            "Use one single 3D visual scene with recognizable subject-specific objects; "
+            "never use panels or infographic layouts. "
             "CRITICAL: render absolutely no text of any kind inside the image: "
             "no letters, words, labels, captions, titles, legends, numbers, maps with names, "
             "diagrams with annotations, watermark or logo. The LIA interface renders the "
-            "Portuguese-Brazil explanation outside the image. "
-            f"Reference facts: {' | '.join(safeEvidence)[:1600]}"
+            "Portuguese-Brazil teaching board outside the image. "
+            f"Reference facts: {' | '.join(safeEvidence)[:1200]}"
         )
 
     def _toContract(self, model: ImageGenerationTaskModel) -> ImageGenerationTaskContract:

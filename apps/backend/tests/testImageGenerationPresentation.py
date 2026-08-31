@@ -1,4 +1,3 @@
-from pathlib import Path
 from types import SimpleNamespace
 from uuid import uuid4
 
@@ -22,8 +21,21 @@ def testImageExplanationUsesSelectedSubjectAndLessonInPortuguese():
     labels = service._labels("Ilustre o relevo brasileiro", context)
 
     assert context == {"subject": "Geografia", "lesson": "Recursos naturais"}
-    assert labels == [
+    assert labels[:3] == [
         "Matéria: Geografia",
         "Lição: Recursos naturais",
         "Explicação visual: Ilustre o relevo brasileiro",
     ]
+    assert "Montanhas|Grandes elevações do terreno" in labels
+    assert "Depressões|Áreas mais baixas que o entorno" in labels
+
+
+def testVisualFactsDiscardSourceLabelsAndInfographicInstructions():
+    service = ImageGenerationService.__new__(ImageGenerationService)
+
+    assert service._visualFact(
+        "Uma montanha sob céu azul. Rótulos: Montanha, Planalto"
+    ) == "Uma montanha sob céu azul."
+    assert service._visualFact(
+        "Diagrama em corte transversal com várias formas de relevo."
+    ) == ""

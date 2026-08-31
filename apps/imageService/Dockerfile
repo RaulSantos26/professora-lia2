@@ -9,7 +9,7 @@ ENV PYTHONUNBUFFERED=1 \
     PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends fonts-dejavu-core \
+    && apt-get install -y --no-install-recommends fonts-dejavu-core tesseract-ocr \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .

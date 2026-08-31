@@ -140,9 +140,14 @@ class ZImageRuntime:
 
                 job.status = "LABELING"
                 job.progressPercent = 82
-                job.message = "Finalizando a imagem sem textos gerados por IA."
+                job.message = "Revisando a ilustração e montando a prancha em português."
+                composed = self._composeTeachingBoard(
+                    image,
+                    job.request.title,
+                    job.request.labels,
+                )
                 filename = f"{job.request.requestId}.png"
-                image.convert("RGB").save(self.outputPath / filename, format="PNG")
+                composed.save(self.outputPath / filename, format="PNG")
                 job.assetFilename = filename
                 job.status = "READY"
                 job.progressPercent = 100
@@ -159,6 +164,94 @@ class ZImageRuntime:
             finally:
                 self.busy = False
 
+
+    def _composeTeachingBoard(self, image, title: str, labels: list[str]):
+        from PIL import Image, ImageDraw, ImageFont
+
+        cleanImage = self._removeDetectedText(image)
+        width, height = cleanImage.size
+        board = Image.new("RGB", (width, height), (252, 248, 240))
+        draw = ImageDraw.Draw(board)
+        fontPath = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+        titleFont = ImageFont.truetype(fontPath, max(22, width // 26))
+        headingFont = ImageFont.truetype(fontPath, max(14, width // 52))
+        bodyFont = ImageFont.truetype(fontPath, max(11, width // 68))
+
+        lesson = next((item.removeprefix("Lição: ") for item in labels if item.startswith("Lição: ")), "Ilustração didática")
+        concepts = [item.split("|", 1) for item in labels if "|" in item]
+        draw.text((22, 16), lesson[:54], font=titleFont, fill=(14, 49, 94))
+
+        leftWidth = 220 if concepts else 20
+        visualX = leftWidth + 12
+        visualY = 82
+        visualWidth = width - visualX - 18
+        visualHeight = height - visualY - 22
+        visual = cleanImage.copy()
+        visual.thumbnail((visualWidth, visualHeight), Image.Resampling.LANCZOS)
+        visualX += (visualWidth - visual.width) // 2
+        visualY += (visualHeight - visual.height) // 2
+        board.paste(visual, (visualX, visualY))
+
+        protectedTextAreas = [(0, 0, width, 70)]
+        if concepts:
+            y = 82
+            for name, description in concepts[:5]:
+                draw.rounded_rectangle((16, y, leftWidth, y + 80), radius=12, fill=(255, 255, 255), outline=(108, 139, 88), width=1)
+                draw.text((28, y + 12), name[:22], font=headingFont, fill=(14, 49, 94))
+                self._drawWrapped(draw, (28, y + 35), description[:74], bodyFont, 170, (32, 50, 70))
+                protectedTextAreas.append((16, y, leftWidth, y + 80))
+                y += 88
+        else:
+            explanation = next((item.removeprefix("Explicação visual: ") for item in labels if item.startswith("Explicação visual: ")), "")
+            self._drawWrapped(draw, (22, 62), explanation, bodyFont, width - 44, (32, 50, 70))
+        return self._removeDetectedText(board, protectedTextAreas)
+
+    def _removeDetectedText(self, image, protectedTextAreas=None):
+        from PIL import Image, ImageFilter
+        try:
+            import pytesseract
+            from pytesseract import Output
+            data = pytesseract.image_to_data(image, config="--psm 11", output_type=Output.DICT)
+            cleaned = image.convert("RGB").copy()
+            for index, value in enumerate(data["text"]):
+                confidence = float(data["conf"][index])
+                if not value.strip() or confidence < 0:
+                    continue
+                x, y = data["left"][index], data["top"][index]
+                w, h = data["width"][index], data["height"][index]
+                pad = max(8, min(20, h))
+                area = (max(0, x - pad), max(0, y - pad), min(cleaned.width, x + w + pad), min(cleaned.height, y + h + pad))
+                if any(
+                    area[0] < protected[2] and area[2] > protected[0]
+                    and area[1] < protected[3] and area[3] > protected[1]
+                    for protected in (protectedTextAreas or [])
+                ):
+                    continue
+                patch = cleaned.crop(area)
+                washed = patch.resize(
+                    (max(1, patch.width // 16), max(1, patch.height // 16)),
+                    Image.Resampling.BILINEAR,
+                ).resize(patch.size, Image.Resampling.BILINEAR)
+                cleaned.paste(washed.filter(ImageFilter.GaussianBlur(radius=4)), area)
+            return cleaned
+        except Exception:
+            logger.warning("Text review unavailable; preserving the generated visual", exc_info=True)
+            return image.convert("RGB")
+
+    def _drawWrapped(self, draw, origin, text: str, font, maxWidth: int, fill):
+        words = text.split()
+        line = ""
+        x, y = origin
+        for word in words:
+            candidate = f"{line} {word}".strip()
+            if line and draw.textlength(candidate, font=font) > maxWidth:
+                draw.text((x, y), line, font=font, fill=fill)
+                y += font.size + 3
+                line = word
+            else:
+                line = candidate
+        if line:
+            draw.text((x, y), line, font=font, fill=fill)
 
 class ImageJobCoordinator:
     def __init__(self, runtime: ZImageRuntime) -> None:
