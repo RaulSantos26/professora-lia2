@@ -5,8 +5,9 @@ from sqlalchemy.orm import Session
 from app.agents.agentToolExecutor import AgentToolExecutor
 from app.agents.tutorAgentGuardrails import TutorAgentGuardrails
 from app.agents.tutorPlannerService import TutorPlannerService
-from app.agents.tutorResponseService import TutorResponseService
 from app.agents.tutorSkillRegistry import TutorSkillRegistry
+from app.agents.specialists.specialistContracts import EvidenceBundle, SpecialistScope
+from app.agents.specialists.tutorSpecialistRegistry import TutorSpecialistRegistry
 from app.domain.common.domainError import DomainError
 from app.persistence.models.agentMessageModel import AgentMessageModel
 from app.persistence.models.agentRunModel import AgentRunModel
@@ -14,7 +15,6 @@ from app.persistence.models.agentThreadModel import AgentThreadModel
 from app.repositories.agentTutorRepository import AgentTutorRepository
 from app.services.capabilityRouterService import CapabilityRouterService
 from app.services.thinkingPolicyService import ThinkingPolicyService
-from app.tools.evidenceSearchTool import EvidenceSearchTool
 from app.tools.pedagogicalCreateTool import PedagogicalCreateTool
 from app.tools.progressReadTool import ProgressReadTool
 from app.tools.visualCreateTool import VisualCreateTool
@@ -28,17 +28,16 @@ class TutorAgentHarness:
         self.router = CapabilityRouterService()
         self.thinking = ThinkingPolicyService()
         self.planner = TutorPlannerService()
-        self.response = TutorResponseService()
         self.guardrails = TutorAgentGuardrails()
         self.skills = TutorSkillRegistry()
         self.toolExecutor = AgentToolExecutor(session)
-        self.evidenceTool = EvidenceSearchTool(session)
         self.progressTool = ProgressReadTool(session)
         self.pedagogicalTool = PedagogicalCreateTool(
             session
         )
         self.visualTool = VisualCreateTool(session)
         self.imageTool = ImageCreateTool(session)
+        self.specialists = TutorSpecialistRegistry(session)
 
     def process(
         self,
@@ -102,6 +101,14 @@ class TutorAgentHarness:
         imageTaskIds = []
 
         tools = list(plan.get("tools") or [])
+        specialistScope = SpecialistScope(
+            studentId=thread.studentId,
+            studentLearningContextId=thread.studentLearningContextId,
+            studentSubjectId=thread.studentSubjectId,
+            studentLearningUnitId=thread.studentLearningUnitId,
+            materialIds=tuple(materialIds),
+            runId=run.agentRunId,
+        )
 
         if "EVIDENCE_SEARCH" in tools:
             evidence = self.toolExecutor.execute(
@@ -120,20 +127,10 @@ class TutorAgentHarness:
                         thread.studentLearningUnitId
                     ),
                 },
-                callback=lambda: self.evidenceTool.execute(
-                    studentId=thread.studentId,
+                callback=lambda: self.specialists.evidence.collect(
+                    scope=specialistScope,
                     query=userMessage.content,
-                    studentLearningContextId=(
-                        thread.studentLearningContextId
-                    ),
-                    studentSubjectId=(
-                        thread.studentSubjectId
-                    ),
-                    studentLearningUnitId=(
-                        thread.studentLearningUnitId
-                    ),
-                    materialIds=materialIds,
-                ),
+                ).toToolResult(),
             )
 
         actionMaterialIds = list(materialIds)
@@ -305,7 +302,7 @@ class TutorAgentHarness:
         run.message = "A Lia está preparando a resposta."
         self.session.commit()
 
-        response = self.response.generate(
+        draft = self.specialists.tutor.draft(
             modelId=decision.effectiveModelId,
             thinkingEnabled=thinkingEnabled,
             userMessage=userMessage.content,
@@ -319,6 +316,26 @@ class TutorAgentHarness:
             actionResults=actions,
             memory=thread.memoryJson or {},
         )
+
+        review = self.specialists.review.review(
+            draft=draft,
+            evidence=(
+                None
+                if evidence is None
+                else EvidenceBundle(
+                    context=str(evidence.get("context") or ""),
+                    hits=list(evidence.get("hits") or []),
+                )
+            ),
+        )
+        run.planJson["specialistReview"] = review.toPlanSummary()
+        if not review.approved:
+            raise DomainError(
+                code=review.code or "SPECIALIST_REVIEW_REJECTED",
+                message=review.message or "A revisão pedagógica recusou a resposta.",
+                httpStatus=409,
+            )
+        response = draft.response
 
         citations = []
 
