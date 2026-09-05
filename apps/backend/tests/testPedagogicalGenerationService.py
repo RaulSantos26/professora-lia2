@@ -70,3 +70,15 @@ def testMindMapNormalizationConnectsOrphanNodesToRoot():
         for node in normalized["nodes"]
     }
     assert parents == {"1": None, "2": "1", "3": "1"}
+
+
+def testEvidenceCleanupRemovesStandaloneOcrNoiseWithoutChangingWords():
+    from app.services.pedagogicalContextService import PedagogicalContextService
+
+    cleaned = PedagogicalContextService._cleanEvidenceExcerpt(
+        "\n)\n\\ 9 —\nAs paisagens brasileiras\n! mares, onde se esconde grande biodiversidade.\n"
+    )
+
+    assert "As paisagens brasileiras" in cleaned
+    assert "biodiversidade" in cleaned
+    assert "\\ 9" not in cleaned

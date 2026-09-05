@@ -1,4 +1,5 @@
 import math
+import re
 from uuid import UUID
 
 from sqlalchemy.orm import Session
@@ -116,7 +117,7 @@ class PedagogicalContextService:
             candidates[: self.MAX_EVIDENCE],
             start=1,
         ):
-            excerpt = candidate.content[:2200]
+            excerpt = self._cleanEvidenceExcerpt(candidate.content)
             protected = self.contentGuard.protect(excerpt)
             piece = (
                 f"[{index}] Material: {candidate.materialTitle}\n"
@@ -145,6 +146,23 @@ class PedagogicalContextService:
 
         return "\n\n".join(pieces), evidence, selectedIds
 
+    @staticmethod
+    def _cleanEvidenceExcerpt(text: str) -> str:
+        """Normalize OCR for context/display without changing stored source text."""
+        cleanedLines = []
+        for rawLine in text.replace("\r", "\n").splitlines():
+            line = re.sub(r"\s+", " ", rawLine).strip(" \t|•*·")
+            alphanumeric = len(re.findall(r"[A-Za-zÀ-ÿ0-9]", line))
+            letters = len(re.findall(r"[A-Za-zÀ-ÿ]", line))
+            if not line or (letters < 4 and alphanumeric < 5):
+                continue
+            if alphanumeric / max(len(line), 1) < 0.38:
+                continue
+            cleanedLines.append(line)
+
+        cleaned = "\n".join(cleanedLines)
+        cleaned = re.sub(r"\n{3,}", "\n\n", cleaned).strip()
+        return (cleaned or text.strip())[:2200]
     def _semanticOrder(
         self,
         candidates: list[RagCandidate],

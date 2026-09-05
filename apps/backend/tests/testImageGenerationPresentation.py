@@ -21,13 +21,26 @@ def testImageExplanationUsesSelectedSubjectAndLessonInPortuguese():
     labels = service._labels("Ilustre o relevo brasileiro", context)
 
     assert context == {"subject": "Geografia", "lesson": "Recursos naturais"}
-    assert labels[:3] == [
+    assert labels == [
         "Matéria: Geografia",
         "Lição: Recursos naturais",
         "Explicação visual: Ilustre o relevo brasileiro",
     ]
-    assert "Montanhas|Grandes elevações do terreno" in labels
-    assert "Depressões|Áreas mais baixas que o entorno" in labels
+
+
+def testReliefPromptUsesStudentRequestForConcreteScene():
+    service = ImageGenerationService.__new__(ImageGenerationService)
+    prompt = service._prompt(
+        "Faça uma ilustração sobre os relevos, corte globo na diagonal para melhor visualização",
+        "ILLUSTRATION",
+        [],
+        {"subject": "Geografia", "lesson": "Recursos naturais"},
+    )
+
+    assert "Earth globe cut diagonally open" in prompt
+    assert "mountains, a plateau, a plain, a valley and a depression" in prompt
+    assert "corkboard" in prompt
+    assert "not a poster, slide" in prompt
 
 
 def testVisualFactsDiscardSourceLabelsAndInfographicInstructions():

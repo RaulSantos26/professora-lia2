@@ -144,17 +144,30 @@ class ImageGenerationService:
             f"Lição: {learningContext['lesson']}",
             f"Explicação visual: {topic}" if topic else "Explicação visual da lição",
         ]
-        if "relevo" in f"{learningContext['lesson']} {topic}".casefold():
-            labels.extend(
-                [
-                    "Montanhas|Grandes elevações do terreno",
-                    "Planaltos|Áreas elevadas, com superfície mais ou menos plana",
-                    "Planícies|Áreas baixas e planas",
-                    "Vales|Áreas alongadas entre elevações",
-                    "Depressões|Áreas mais baixas que o entorno",
-                ]
+        return labels
+
+    def _sceneBrief(self, instruction: str) -> str:
+        """Translate concrete teaching requests into an image-model scene brief."""
+        request = " ".join(instruction.split())
+        normalized = request.casefold()
+        if any(term in normalized for term in ("relevo", "montanha", "planalto", "planície", "planicie", "depressão", "depressao")):
+            if "globo" in normalized or "terra" in normalized:
+                return (
+                    "Show one large Earth globe cut diagonally open, with a clean cross-section "
+                    "from the deep interior to the crust. On the visible surface, clearly show "
+                    "mountains, a plateau, a plain, a valley and a depression as real landforms. "
+                    "Use a single continuous landscape, not a map."
+                )
+            return (
+                "Show one continuous geological cross-section from deep rock layers up to the "
+                "surface, with mountains, a plateau, a plain, a valley and a depression clearly "
+                "distinguished by shape and elevation."
             )
-        return labels[:8]
+        return (
+            "Depict the learning goal requested by the student as the central scene. Choose the "
+            "objects, viewpoint and composition from that request; do not add unrelated classroom "
+            "objects or a generic presentation layout."
+        )
 
     def _visualFact(self, excerpt: str) -> str:
         """Keep semantic facts, never source labels or infographic instructions."""
@@ -178,24 +191,27 @@ class ImageGenerationService:
                 visualFact = self._visualFact(str(item.get("excerpt") or ""))
                 if visualFact:
                     safeEvidence.append(visualFact)
-        mode = (
-            "a single concrete visual companion for an interactive mind map"
-            if imageMode == "MIND_MAP_COMPANION"
-            else "a single concrete and accurate educational illustration"
-        )
-        return (
-            f"Create {mode}. Brazilian school subject: {learningContext['subject']}. "
-            f"Current lesson: {learningContext['lesson']}. "
-            f"Required topic: {' '.join(instruction.split())[:1200]}. "
-            "Use one single 3D visual scene with recognizable subject-specific objects; "
-            "never use panels or infographic layouts. "
-            "CRITICAL: render absolutely no text of any kind inside the image: "
-            "no letters, words, labels, captions, titles, legends, numbers, maps with names, "
-            "diagrams with annotations, watermark or logo. The LIA interface renders the "
-            "Portuguese-Brazil teaching board outside the image. "
-            f"Reference facts: {' | '.join(safeEvidence)[:1200]}"
-        )
 
+        mode = (
+            "a visual companion for an interactive mind map"
+            if imageMode == "MIND_MAP_COMPANION"
+            else "an educational illustration"
+        )
+        request = " ".join(instruction.split())[:1200]
+        return (
+            f"Create {mode} for a Brazilian school student. "
+            f"Student request (highest priority): {request}. "
+            f"Teaching context for disambiguation only: subject {learningContext['subject']}; "
+            f"lesson {learningContext['lesson']}. "
+            f"Scene brief: {self._sceneBrief(request)} "
+            "Make the requested concept immediately recognizable at first glance, with one clear "
+            "central composition and enough empty space around it. Render a full-bleed textbook "
+            "illustration, not a poster, slide, classroom board, framed picture, corkboard, loose "
+            "paper, collage or infographic. Do not add maps, globes or classroom objects unless the "
+            "student explicitly asked for them. Render no text, letters, labels, numbers, captions, "
+            "legend, watermark or logo inside the image. "
+            f"Useful factual details, only when relevant: {' | '.join(safeEvidence)[:900]}"
+        )
     def _toContract(self, model: ImageGenerationTaskModel) -> ImageGenerationTaskContract:
         return ImageGenerationTaskContract(
             imageTaskId=model.imageTaskId, studentId=model.studentId,

@@ -221,6 +221,25 @@ function typeLabel(type: PedagogicalArtifactType): string {
   return actionCards.find(item => item.type === type)?.title ?? type
 }
 
+function evidenceKind(locator: string): string {
+  if (locator.startsWith('Vision/OCR')) return 'Texto conferido pela Lia'
+  if (locator.startsWith('OCR local')) return 'Trecho OCR normalizado'
+  if (locator.startsWith('Vision')) return 'Leitura visual da Lia'
+  return 'Evidência do material'
+}
+
+function formattedEvidenceExcerpt(excerpt: string): string {
+  return excerpt
+    .split(/\r?\n/)
+    .map(line => line.replace(/\s+/g, ' ').trim())
+    .filter(line => {
+      const letters = (line.match(/[A-Za-zÀ-ÿ]/g) ?? []).length
+      const alphanumeric = (line.match(/[A-Za-zÀ-ÿ0-9]/g) ?? []).length
+      return letters >= 4 || alphanumeric >= 5
+    })
+    .join('\n')
+    .trim()
+}
 function confirmArchive(artifact: PedagogicalArtifactContract) {
   if (
     artifact.status === 'QUEUED'
@@ -576,15 +595,20 @@ function confirmArchive(artifact: PedagogicalArtifactContract) {
               ({{ selectedArtifact.sourceEvidence.length }})
             </summary>
 
+            <p class="pedagogicalEvidenceIntro">
+              Trechos organizados para leitura. Após sucesso completo, a foto original é descartada; permanecem o texto, a leitura visual e os metadados estruturados.
+            </p>
             <article
               v-for="(evidence, index) in selectedArtifact.sourceEvidence"
               :key="`${evidence.materialId}-${index}`"
+              class="pedagogicalEvidenceItem"
             >
-              <strong>
-                [{{ index + 1 }}] {{ evidence.materialTitle }}
-              </strong>
-              <small>{{ evidence.locator }}</small>
-              <p>{{ evidence.excerpt }}</p>
+              <strong>[{{ index + 1 }}] {{ evidence.materialTitle }}</strong>
+              <small>{{ evidenceKind(evidence.locator) }} · {{ evidence.locator }}</small>
+              <details>
+                <summary>Ver trecho usado pela Lia</summary>
+                <p>{{ formattedEvidenceExcerpt(evidence.excerpt) }}</p>
+              </details>
             </article>
           </details>
         </template>

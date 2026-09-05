@@ -70,7 +70,7 @@ class TutorPlannerService:
                 },
                 "imageMode": {
                     "type": ["string", "null"],
-                    "enum": ["ILLUSTRATION", "MIND_MAP_COMPANION", None],
+                    "enum": ["ILLUSTRATION", None],
                 },
                 "pedagogicalType": {
                     "type": [
@@ -111,7 +111,7 @@ REGRAS:
   DEVEM usar EVIDENCE_SEARCH.
 - TEACH, EXPLAIN, SUMMARY, FLASHCARDS, EXERCISES e QUIZ:
   use EVIDENCE_SEARCH + PEDAGOGICAL_CREATE.
-- MIND_MAP usa EVIDENCE_SEARCH + VISUAL_CREATE + IMAGE_GENERATION, com imageMode MIND_MAP_COMPANION.
+- MIND_MAP usa EVIDENCE_SEARCH + VISUAL_CREATE. Nunca use IMAGE_GENERATION para mapa mental.
 - DIAGRAM, CHART, ANIMATION_2D e SCENE_3D usam EVIDENCE_SEARCH + VISUAL_CREATE.
 - Quando o aluno pedir imagem, desenho, ilustração, figura ou visual didático, use EVIDENCE_SEARCH + IMAGE_GENERATION, com imageMode ILLUSTRATION.
 - ANSWER usa EVIDENCE_SEARCH.
@@ -148,10 +148,9 @@ MENSAGEM DO ALUNO:
                     "tools": [
                         "EVIDENCE_SEARCH",
                         "VISUAL_CREATE",
-                        "IMAGE_GENERATION",
                     ],
                     "visualType": "MIND_MAP",
-                    "imageMode": "MIND_MAP_COMPANION",
+                    "imageMode": None,
                 }
             )
             return adjusted

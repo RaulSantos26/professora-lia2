@@ -11,7 +11,7 @@ def testExplicitIllustrationAlwaysUsesInternalImageTool():
     assert result["imageMode"] == "ILLUSTRATION"
 
 
-def testExplicitMindMapKeepsSvgAndAddsImageCompanion():
+def testExplicitMindMapUsesOnlyStructuredVisualTool():
     result = TutorPlannerService.enforceVisualIntent(
         plan={"intent": "ANSWER", "tools": ["EVIDENCE_SEARCH"]},
         message="Crie um mapa mental sobre recursos naturais.",
@@ -21,7 +21,6 @@ def testExplicitMindMapKeepsSvgAndAddsImageCompanion():
     assert result["tools"] == [
         "EVIDENCE_SEARCH",
         "VISUAL_CREATE",
-        "IMAGE_GENERATION",
     ]
     assert result["visualType"] == "MIND_MAP"
-    assert result["imageMode"] == "MIND_MAP_COMPANION"
+    assert result["imageMode"] is None

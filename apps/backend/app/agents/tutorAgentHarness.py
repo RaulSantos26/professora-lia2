@@ -273,36 +273,33 @@ class TutorAgentHarness:
             )
 
         if "IMAGE_GENERATION" in tools:
-            imageMode = plan.get("imageMode") or (
-                "MIND_MAP_COMPANION" if plan.get("intent") == "MIND_MAP" else "ILLUSTRATION"
-            )
-            relatedVisualTaskId = (
-                UUID(visualTaskIds[-1]) if imageMode == "MIND_MAP_COMPANION" and visualTaskIds else None
-            )
-            action = self.toolExecutor.execute(
-                runId=run.agentRunId,
-                toolName="IMAGE_GENERATION",
-                request={
-                    "imageMode": imageMode,
-                    "materialIds": actionMaterialIds,
-                    "relatedVisualTaskId": str(relatedVisualTaskId) if relatedVisualTaskId else None,
-                },
-                callback=lambda: self.imageTool.execute(
-                    studentId=thread.studentId,
-                    imageMode=str(imageMode),
-                    instruction=userMessage.content,
-                    materialIds=actionMaterialIds,
-                    studentLearningContextId=thread.studentLearningContextId,
-                    studentSubjectId=thread.studentSubjectId,
-                    studentLearningUnitId=thread.studentLearningUnitId,
-                    agentThreadId=thread.agentThreadId,
-                    agentRunId=run.agentRunId,
-                    relatedVisualTaskId=relatedVisualTaskId,
-                ),
-            )
-            actions.append({"type": "IMAGE_TASK", **action})
-            imageTaskIds.append(action["imageTaskId"])
-
+            imageMode = plan.get("imageMode") or "ILLUSTRATION"
+            # Mind maps are structured visual tasks, never generated images.
+            # Keep this guard for old persisted or model-produced plans.
+            if imageMode != "MIND_MAP_COMPANION":
+                action = self.toolExecutor.execute(
+                    runId=run.agentRunId,
+                    toolName="IMAGE_GENERATION",
+                    request={
+                        "imageMode": imageMode,
+                        "materialIds": actionMaterialIds,
+                        "relatedVisualTaskId": None,
+                    },
+                    callback=lambda: self.imageTool.execute(
+                        studentId=thread.studentId,
+                        imageMode=str(imageMode),
+                        instruction=userMessage.content,
+                        materialIds=actionMaterialIds,
+                        studentLearningContextId=thread.studentLearningContextId,
+                        studentSubjectId=thread.studentSubjectId,
+                        studentLearningUnitId=thread.studentLearningUnitId,
+                        agentThreadId=thread.agentThreadId,
+                        agentRunId=run.agentRunId,
+                        relatedVisualTaskId=None,
+                    ),
+                )
+                actions.append({"type": "IMAGE_TASK", **action})
+                imageTaskIds.append(action["imageTaskId"])
         run.stage = "ANSWERING"
         run.progressPercent = 75
         run.message = "A Lia está preparando a resposta."

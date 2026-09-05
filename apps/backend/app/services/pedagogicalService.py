@@ -237,11 +237,8 @@ class PedagogicalService:
             effectiveTextModelId=decision.effectiveModelId,
             sourceEvidence=evidence,
         )
-        if artifact.artifactType == "MIND_MAP":
-            self.imageGeneration.createForPedagogicalMindMap(
-                artifact=artifact,
-                evidence=evidence,
-            )
+        # MIND_MAP is rendered by the structured visual engine.  Do not create
+        # a raster companion: generated text makes it unreadable and duplicates the map.
         self.session.commit()
 
     def submitAttempt(

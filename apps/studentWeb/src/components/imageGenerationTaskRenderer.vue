@@ -5,9 +5,12 @@ import type { ImageGenerationTaskContract } from '../contracts/imageGenerationCo
 
 const props = defineProps<{ task: ImageGenerationTaskContract }>()
 const fullscreen = ref(false)
+const isMindMapCompanion = computed(() => props.task.imageMode === 'MIND_MAP_COMPANION')
 
-const contextLabels = computed(
-  () => props.task.labels.filter(label => !label.startsWith('Explicação visual:'))
+const contextLabels = computed(() =>
+  props.task.labels
+    .filter(label => !label.startsWith('Explicação visual:'))
+    .map(label => label.replace('|', ' — '))
 )
 const explanation = computed(
   () => props.task.labels.find(label => label.startsWith('Explicação visual:')) ?? null
@@ -30,7 +33,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
 </script>
 
 <template>
-  <article class="visualTaskCard imageGenerationCard">
+  <article v-if="!isMindMapCompanion" class="visualTaskCard imageGenerationCard">
     <header class="visualTaskHeader">
       <div>
         <p class="eyebrow">Z-IMAGE · {{ task.imageMode === 'MIND_MAP_COMPANION' ? 'MAPA ILUSTRADO' : 'ILUSTRAÇÃO' }}</p>
@@ -66,7 +69,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
     </section>
   </article>
 
-  <Teleport to="body">
+  <Teleport v-if="!isMindMapCompanion" to="body">
     <section
       v-if="fullscreen && task.assetUrl"
       class="imageFullscreen"

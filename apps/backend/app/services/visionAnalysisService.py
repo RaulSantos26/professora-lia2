@@ -12,7 +12,7 @@ Você está analisando uma página ou imagem de material educacional.
 
 Objetivos:
 1. Detecte se a imagem precisa ser girada para ficar na orientação correta.
-2. TRANSCRIÇÃO É A PRIORIDADE: copie integralmente cada parágrafo legível,
+2. ATUE COMO CURADORA DE CONTEÚDO: TRANSCRIÇÃO É A PRIORIDADE. Copie integralmente cada parágrafo legível,
    na ordem em que aparece. Corrija somente erros evidentes do OCR preliminar,
    sem inventar trechos que não possa ver.
 3. Identifique figuras, diagramas, tabelas, fotos e legendas.
@@ -25,7 +25,7 @@ orientationDegrees deve ser 0, 90, 180 ou 270 e significa quantos graus
 a imagem precisa ser girada NO SENTIDO HORÁRIO para ficar corretamente
 orientada.
 
-Preencha extractedText com a transcrição completa. summary é somente um
+Preencha extractedText com a transcrição completa, limpa de ruídos isolados de OCR e organizada em parágrafos. Se a página tiver texto legível, extractedText não pode ficar vazio. summary é somente um
 resumo curto e nunca substitui a transcrição.
 Se não houver texto legível, extractedText deve ser string vazia.
 """
