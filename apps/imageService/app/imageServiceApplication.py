@@ -158,9 +158,17 @@ class ZImageRuntime:
                     job.seed = attemptSeed
                     break
 
+                usedCleanFallback = False
                 if image is None:
-                    raise ImageTextQualityError(
-                        "A ilustração continha texto gerado e não passou no controle de legibilidade."
+                    image = self._cleanFallback(job.request)
+                    if image is None:
+                        raise ImageTextQualityError(
+                            "A ilustração continha texto gerado e não passou no controle de legibilidade."
+                        )
+                    usedCleanFallback = True
+                    logger.warning(
+                        "Using clean didactic fallback requestId=%s after text rejection",
+                        job.request.requestId,
                     )
 
                 job.status = "LABELING"
@@ -171,7 +179,11 @@ class ZImageRuntime:
                 job.assetFilename = filename
                 job.status = "READY"
                 job.progressPercent = 100
-                job.message = "Imagem didática pronta."
+                job.message = (
+                    "Ilustração didática limpa pronta."
+                    if usedCleanFallback
+                    else "Imagem didática pronta."
+                )
                 job.elapsedSeconds = round(time.monotonic() - startedAt, 3)
             except Exception as error:
                 job.status = "ERROR"
@@ -188,6 +200,52 @@ class ZImageRuntime:
                 logger.exception("Image generation failed requestId=%s", job.request.requestId)
             finally:
                 self.busy = False
+
+    @staticmethod
+    def _cleanFallback(request: ImageJobRequest):
+        """Text-free educational scene used only when Z-Image violates the typography gate."""
+        from PIL import Image, ImageDraw
+
+        topic = request.prompt.casefold()
+        if not any(term in topic for term in ("eros", "relevo", "montanha", "planalto", "planície", "depressão")):
+            return None
+
+        image = Image.new("RGB", (request.width, request.height), "#dff2ff")
+        draw = ImageDraw.Draw(image)
+        horizon = int(request.height * 0.55)
+        draw.rectangle((0, horizon, request.width, request.height), fill="#8d633e")
+        draw.polygon(
+            [(0, horizon), (150, 250), (290, horizon), (430, 190), (600, horizon), (request.width, 300), (request.width, horizon)],
+            fill="#6c8f3a",
+        )
+        draw.polygon(
+            [(95, horizon), (220, 210), (330, horizon)],
+            fill="#87603a",
+        )
+        draw.polygon(
+            [(360, horizon), (475, 160), (610, horizon)],
+            fill="#9a6a3b",
+        )
+        draw.polygon(
+            [(0, horizon), (155, 338), (300, horizon)],
+            fill="#b9824b",
+        )
+        draw.polygon(
+            [(365, horizon), (485, 288), (650, horizon)],
+            fill="#bf8a51",
+        )
+        for x in range(42, request.width, 62):
+            draw.line((x, 45, x - 18, 160), fill="#3b9ed8", width=5)
+        draw.polygon(
+            [(0, 410), (185, 394), (355, 420), (545, 398), (request.width, 430), (request.width, request.height), (0, request.height)],
+            fill="#3caddb",
+        )
+        for x in range(35, request.width, 110):
+            draw.line((x, 452, x + 70, 462), fill="#8cd5ec", width=4)
+        for x in (120, 265, 520, 670):
+            draw.rectangle((x, 303, x + 8, 344), fill="#63452c")
+            draw.ellipse((x - 19, 275, x + 28, 321), fill="#3d8b47")
+        return image
 
     @staticmethod
     def _containsDetectedText(image) -> bool:
