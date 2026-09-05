@@ -124,7 +124,9 @@ const materialGroups = computed<MaterialGroup[]>(() => {
         groupId,
         title: ordered.length > 1
           ? `Material consolidado · ${ordered.length} páginas`
-          : first.title,
+          : first.sourceFileRetained
+            ? first.title
+            : 'Texto estruturado individual',
         materialIds: ordered.map(item => item.materialId),
         pageCount: ordered.length
       }
