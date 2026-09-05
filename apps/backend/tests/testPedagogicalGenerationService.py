@@ -73,9 +73,9 @@ def testMindMapNormalizationConnectsOrphanNodesToRoot():
 
 
 def testEvidenceCleanupRemovesStandaloneOcrNoiseWithoutChangingWords():
-    from app.services.pedagogicalContextService import PedagogicalContextService
+    from app.services.evidenceCurationService import EvidenceCurationService
 
-    cleaned = PedagogicalContextService._cleanEvidenceExcerpt(
+    cleaned = EvidenceCurationService.cleanText(
         "\n)\n\\ 9 —\nAs paisagens brasileiras\n! mares, onde se esconde grande biodiversidade.\n"
     )
 

@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.domain.common.domainError import DomainError
 from app.repositories.ragRepository import RagCandidate, RagRepository
 from app.services.contentGuardService import ContentGuardService
+from app.services.evidenceCurationService import EvidenceCurationService
 from app.services.ollamaClientService import OllamaClientService
 
 
@@ -15,6 +16,7 @@ class EvidenceSearchTool:
     def __init__(self, session: Session):
         self.repository = RagRepository(session)
         self.contentGuard = ContentGuardService()
+        self.evidenceCuration = EvidenceCurationService()
         self.ollama = OllamaClientService()
 
     def execute(
@@ -35,6 +37,8 @@ class EvidenceSearchTool:
             studentLearningUnitId=studentLearningUnitId,
             materialIds=materialIds,
         )
+
+        candidates = self.evidenceCuration.curateCandidates(candidates)
 
         if not candidates:
             raise DomainError(
@@ -107,7 +111,7 @@ class EvidenceSearchTool:
                         candidate.materialTitle
                     ),
                     "locator": candidate.locator,
-                    "excerpt": candidate.content[:2400],
+                    "excerpt": self.evidenceCuration.cleanText(candidate.content)[:2400],
                 }
             )
 

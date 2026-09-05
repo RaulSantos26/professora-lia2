@@ -8,6 +8,7 @@ from app.domain.common.domainError import DomainError
 from app.repositories.materialRepository import MaterialRepository
 from app.repositories.ragRepository import RagCandidate, RagRepository
 from app.services.contentGuardService import ContentGuardService
+from app.services.evidenceCurationService import EvidenceCurationService
 from app.services.ollamaClientService import OllamaClientService
 
 
@@ -19,6 +20,7 @@ class PedagogicalContextService:
         self.materialRepository = MaterialRepository(session)
         self.ragRepository = RagRepository(session)
         self.contentGuard = ContentGuardService()
+        self.evidenceCuration = EvidenceCurationService()
         self.ollama = OllamaClientService()
 
     def build(
@@ -75,22 +77,7 @@ class PedagogicalContextService:
                 httpStatus=409,
             )
 
-        # A transcription verified by Vision supersedes noisy local OCR for
-        # the same material. Keep local OCR only as a fallback.
-        visionMaterialIds = {
-            item.materialId
-            for item in candidates
-            if item.locator.startswith("Vision/OCR")
-            and len(item.content.strip()) >= 80
-        }
-        candidates = [
-            item
-            for item in candidates
-            if not (
-                item.materialId in visionMaterialIds
-                and item.locator.startswith("OCR local")
-            )
-        ]
+        candidates = self.evidenceCuration.curateCandidates(candidates)
 
         if focusQuery and focusQuery.strip():
             candidates = self._semanticOrder(
@@ -117,7 +104,7 @@ class PedagogicalContextService:
             candidates[: self.MAX_EVIDENCE],
             start=1,
         ):
-            excerpt = self._cleanEvidenceExcerpt(candidate.content)
+            excerpt = self.evidenceCuration.cleanText(candidate.content)[:2200]
             protected = self.contentGuard.protect(excerpt)
             piece = (
                 f"[{index}] Material: {candidate.materialTitle}\n"
@@ -146,23 +133,6 @@ class PedagogicalContextService:
 
         return "\n\n".join(pieces), evidence, selectedIds
 
-    @staticmethod
-    def _cleanEvidenceExcerpt(text: str) -> str:
-        """Normalize OCR for context/display without changing stored source text."""
-        cleanedLines = []
-        for rawLine in text.replace("\r", "\n").splitlines():
-            line = re.sub(r"\s+", " ", rawLine).strip(" \t|•*·")
-            alphanumeric = len(re.findall(r"[A-Za-zÀ-ÿ0-9]", line))
-            letters = len(re.findall(r"[A-Za-zÀ-ÿ]", line))
-            if not line or (letters < 4 and alphanumeric < 5):
-                continue
-            if alphanumeric / max(len(line), 1) < 0.38:
-                continue
-            cleanedLines.append(line)
-
-        cleaned = "\n".join(cleanedLines)
-        cleaned = re.sub(r"\n{3,}", "\n\n", cleaned).strip()
-        return (cleaned or text.strip())[:2200]
     def _semanticOrder(
         self,
         candidates: list[RagCandidate],
