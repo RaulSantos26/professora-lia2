@@ -24,8 +24,17 @@ def testImageExplanationUsesSelectedSubjectAndLessonInPortuguese():
     assert labels == [
         "Matéria: Geografia",
         "Lição: Recursos naturais",
-        "Explicação visual: Ilustre o relevo brasileiro",
+        "Explicação visual: Observe as diferenças de altura e de forma do terreno; elas ajudam a reconhecer as formas de relevo estudadas nesta lição.",
     ]
+
+
+def testErosionExplanationIsPortugueseAndDoesNotReuseStudentCommand():
+    service = ImageGenerationService.__new__(ImageGenerationService)
+
+    explanation = service._didacticExplanation("Faça uma ilustração sobre a erosão")
+
+    assert explanation.startswith("A erosão desgasta")
+    assert "Faça uma ilustração" not in explanation
 
 
 def testReliefPromptUsesStudentRequestForConcreteScene():
@@ -41,6 +50,7 @@ def testReliefPromptUsesStudentRequestForConcreteScene():
     assert "mountains, a plateau, a plain, a valley and a depression" in prompt
     assert "corkboard" in prompt
     assert "not a poster, slide" in prompt
+    assert "title area" in prompt
 
 
 def testVisualFactsDiscardSourceLabelsAndInfographicInstructions():

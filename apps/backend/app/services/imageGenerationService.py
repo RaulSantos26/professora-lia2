@@ -142,9 +142,27 @@ class ImageGenerationService:
         labels = [
             f"Matéria: {learningContext['subject']}",
             f"Lição: {learningContext['lesson']}",
-            f"Explicação visual: {topic}" if topic else "Explicação visual da lição",
+            f"Explicação visual: {self._didacticExplanation(topic)}",
         ]
         return labels
+
+    def _didacticExplanation(self, topic: str) -> str:
+        normalized = topic.casefold()
+        if "eros" in normalized:
+            return (
+                "A erosão desgasta e transporta partes do solo e das rochas "
+                "pela ação da água, do vento e de outros agentes naturais."
+            )
+        if any(term in normalized for term in ("relevo", "montanha", "planalto", "planície", "planicie", "depressão", "depressao")):
+            return (
+                "Observe as diferenças de altura e de forma do terreno; elas "
+                "ajudam a reconhecer as formas de relevo estudadas nesta lição."
+            )
+        return (
+            "Observe os elementos da cena e relacione-os ao tema estudado: "
+            + (topic if topic else "conteúdo da lição")
+            + "."
+        )
 
     def _sceneBrief(self, instruction: str) -> str:
         """Translate concrete teaching requests into an image-model scene brief."""
@@ -208,8 +226,10 @@ class ImageGenerationService:
             "central composition and enough empty space around it. Render a full-bleed textbook "
             "illustration, not a poster, slide, classroom board, framed picture, corkboard, loose "
             "paper, collage or infographic. Do not add maps, globes or classroom objects unless the "
-            "student explicitly asked for them. Render no text, letters, labels, numbers, captions, "
-            "legend, watermark or logo inside the image. "
+            "student explicitly asked for them. This is a scene-only image: never create a board, "
+            "sign, poster, frame, paper, title area, label box or empty surface for writing. "
+            "Render no text, letters, labels, numbers, captions, legend, watermark or logo inside "
+            "the image. Any visible typography makes the illustration unusable. "
             f"Useful factual details, only when relevant: {' | '.join(safeEvidence)[:900]}"
         )
     def _toContract(self, model: ImageGenerationTaskModel) -> ImageGenerationTaskContract:

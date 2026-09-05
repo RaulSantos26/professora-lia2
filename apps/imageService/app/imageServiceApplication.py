@@ -1,6 +1,7 @@
 import logging
 import os
 import queue
+import re
 import threading
 import time
 from dataclasses import dataclass, field
@@ -70,6 +71,10 @@ class ImageJob:
         )
 
 
+class ImageTextQualityError(RuntimeError):
+    pass
+
+
 class ZImageRuntime:
     """Keeps the pipeline warm and serializes GPU work through its lock."""
 
@@ -127,16 +132,36 @@ class ZImageRuntime:
                 job.progressPercent = 45
                 job.message = "Gerando a ilustração didática."
                 seed = job.request.seed or int(time.time_ns() % 2_147_483_647)
-                job.seed = seed
-                generator = torch.Generator("cpu").manual_seed(seed)
-                image = self.pipeline(
-                    prompt=job.request.prompt,
-                    width=job.request.width,
-                    height=job.request.height,
-                    num_inference_steps=job.request.steps,
-                    guidance_scale=0.0,
-                    generator=generator,
-                ).images[0]
+                image = None
+                for attempt in range(3):
+                    attemptSeed = seed + attempt
+                    generator = torch.Generator("cpu").manual_seed(attemptSeed)
+                    candidate = self.pipeline(
+                        prompt=(
+                            job.request.prompt
+                            + " Strict quality rule: scene only, absolutely no typography or writing."
+                        ),
+                        width=job.request.width,
+                        height=job.request.height,
+                        num_inference_steps=job.request.steps,
+                        guidance_scale=0.0,
+                        generator=generator,
+                    ).images[0]
+                    if self._containsDetectedText(candidate):
+                        logger.warning(
+                            "Rejected Z-Image output with detected text requestId=%s attempt=%s",
+                            job.request.requestId,
+                            attempt + 1,
+                        )
+                        continue
+                    image = candidate
+                    job.seed = attemptSeed
+                    break
+
+                if image is None:
+                    raise ImageTextQualityError(
+                        "A ilustração continha texto gerado e não passou no controle de legibilidade."
+                    )
 
                 job.status = "LABELING"
                 job.progressPercent = 82
@@ -151,13 +176,38 @@ class ZImageRuntime:
             except Exception as error:
                 job.status = "ERROR"
                 job.progressPercent = 100
-                job.message = "Não foi possível gerar a imagem didática."
-                job.errorCode = type(error).__name__.upper()
-                job.errorMessage = str(error)[:1000]
+                if isinstance(error, ImageTextQualityError):
+                    job.message = "A imagem não passou no controle de texto legível."
+                    job.errorCode = "IMAGE_TEXT_QUALITY_REJECTED"
+                    job.errorMessage = str(error)[:1000]
+                else:
+                    job.message = "Não foi possível gerar a imagem didática."
+                    job.errorCode = type(error).__name__.upper()
+                    job.errorMessage = str(error)[:1000]
                 job.elapsedSeconds = round(time.monotonic() - startedAt, 3)
                 logger.exception("Image generation failed requestId=%s", job.request.requestId)
             finally:
                 self.busy = False
+
+    @staticmethod
+    def _containsDetectedText(image) -> bool:
+        """Reject readable typography; explanations are rendered by the UI."""
+        import pytesseract
+        from pytesseract import Output
+
+        data = pytesseract.image_to_data(
+            image.convert("RGB"), lang="eng", config="--psm 11", output_type=Output.DICT
+        )
+        words = []
+        for text, confidence in zip(data.get("text", []), data.get("conf", [])):
+            token = re.sub(r"[^A-Za-zÀ-ÿ]", "", str(text or ""))
+            try:
+                score = float(confidence)
+            except (TypeError, ValueError):
+                score = -1
+            if len(token) >= 3 and score >= 35:
+                words.append(token)
+        return len(words) >= 2
 
 
 class ImageJobCoordinator:
