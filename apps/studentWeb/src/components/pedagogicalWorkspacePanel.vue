@@ -60,6 +60,14 @@ const requestedTextModelId = ref('')
 const thinkingMode = ref<'AUTO' | 'ON' | 'OFF'>('AUTO')
 const selectedMaterialIds = ref<string[]>([])
 
+type MaterialGroup = {
+  groupId: string
+  title: string
+  materialIds: string[]
+  pageCount: number
+  aiMode: string
+}
+
 const actionCards: Array<{
   type: PedagogicalArtifactType
   title: string
@@ -114,11 +122,47 @@ const studyMaterials = computed(
   () => props.materials.filter(
     material =>
       material.studyEnabled
+      && material.studentSubjectId === props.selectedSubjectId
+      && material.studentLearningUnitId === props.selectedUnitId
       && (
         material.status === 'READY'
         || material.status === 'PARTIAL'
       )
   )
+)
+
+const materialGroups = computed<MaterialGroup[]>(() => {
+  const grouped = new Map<string, MaterialContract[]>()
+
+  for (const material of studyMaterials.value) {
+    const groupId = material.sourceGroupId ?? material.materialId
+    const items = grouped.get(groupId) ?? []
+    items.push(material)
+    grouped.set(groupId, items)
+  }
+
+  return Array.from(grouped.entries())
+    .map(([groupId, items]) => {
+      const ordered = [...items].sort(
+        (left, right) => (left.sourceSequence ?? 0) - (right.sourceSequence ?? 0)
+      )
+      const first = ordered[0]
+
+      return {
+        groupId,
+        title: ordered.length > 1
+          ? `Material consolidado · ${ordered.length} páginas`
+          : first.title,
+        materialIds: ordered.map(item => item.materialId),
+        pageCount: ordered.length,
+        aiMode: first.aiMode
+      }
+    })
+    .sort((left, right) => left.title.localeCompare(right.title))
+})
+
+const selectedMaterialGroupCount = computed(
+  () => materialGroups.value.filter(isMaterialGroupSelected).length
 )
 
 const textModels = computed(
@@ -157,37 +201,42 @@ const showAssessmentOptions = computed(
 )
 
 watch(
-  () => props.selectedMaterial?.materialId,
-  materialId => {
+  [
+    () => props.selectedSubjectId,
+    () => props.selectedUnitId,
+    () => props.selectedMaterial?.materialId
+  ],
+  () => {
     const selected = studyMaterials.value.find(
-      item => item.materialId === materialId
+      item => item.materialId === props.selectedMaterial?.materialId
+    )
+    const selectedGroup = materialGroups.value.find(
+      group => group.materialIds.includes(selected?.materialId ?? '')
     )
 
-    if (selected?.sourceGroupId) {
-      selectedMaterialIds.value = studyMaterials.value
-        .filter(
-          item => item.sourceGroupId === selected.sourceGroupId
-        )
-        .sort(
-          (left, right) =>
-            (left.sourceSequence ?? 0)
-            - (right.sourceSequence ?? 0)
-        )
-        .map(item => item.materialId)
-      return
-    }
-
-    if (selected) {
-      selectedMaterialIds.value = [selected.materialId]
-    } else if (
-      selectedMaterialIds.value.length === 0
-      && studyMaterials.value.length > 0
-    ) {
-      selectedMaterialIds.value = [studyMaterials.value[0].materialId]
-    }
+    selectedMaterialIds.value = selectedGroup?.materialIds
+      ?? materialGroups.value[0]?.materialIds
+      ?? []
   },
   { immediate: true }
 )
+
+function isMaterialGroupSelected(group: MaterialGroup): boolean {
+  return group.materialIds.every(
+    materialId => selectedMaterialIds.value.includes(materialId)
+  )
+}
+
+function toggleMaterialGroup(group: MaterialGroup, selected: boolean) {
+  const allowedIds = new Set(studyMaterials.value.map(item => item.materialId))
+  const current = selectedMaterialIds.value.filter(
+    materialId => allowedIds.has(materialId)
+  )
+
+  selectedMaterialIds.value = selected
+    ? Array.from(new Set([...current, ...group.materialIds]))
+    : current.filter(materialId => !group.materialIds.includes(materialId))
+}
 
 function selectSubject(event: Event) {
   emit('selectSubject', (event.target as HTMLSelectElement).value)
@@ -363,25 +412,30 @@ function confirmArchive(artifact: PedagogicalArtifactContract) {
 
       <details class="pedagogicalSourceSelector" open>
         <summary>
-          Materiais usados ({{ selectedMaterialIds.length }})
+          Materiais consolidados usados ({{ selectedMaterialGroupCount }})
         </summary>
+
+        <p class="emptyState">
+          Cada lote de fotos é um único texto estruturado e auditado desta lição.
+        </p>
 
         <div class="pedagogicalMaterialChoices">
           <label
-            v-for="material in studyMaterials"
-            :key="material.materialId"
+            v-for="group in materialGroups"
+            :key="group.groupId"
             class="materialChoice"
           >
             <input
-              v-model="selectedMaterialIds"
               type="checkbox"
-              :value="material.materialId"
+              :checked="isMaterialGroupSelected(group)"
+              @change="toggleMaterialGroup(group, ($event.target as HTMLInputElement).checked)"
             />
             <span>
-              <strong>{{ material.title }}</strong>
+              <strong>{{ group.title }}</strong>
               <small>
-                {{ material.materialType }}
-                · {{ material.aiMode }}
+                {{ group.pageCount }} página(s)
+                · TEXTO ESTRUTURADO
+                · {{ group.aiMode }}
               </small>
             </span>
           </label>
