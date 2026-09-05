@@ -194,6 +194,11 @@ export function usePedagogicalWorkspace(options: Options) {
         selectedArtifact.value = null
       }
 
+      artifacts.value = artifacts.value.filter(
+        artifact => artifact.pedagogicalArtifactId !== artifactId
+      )
+      latestAttempt.value = null
+
       options.setSuccess('Conteúdo removido do histórico de estudo.')
     } catch (error) {
       options.showError(error)

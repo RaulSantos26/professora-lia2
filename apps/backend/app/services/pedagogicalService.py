@@ -1,4 +1,5 @@
 import re
+from collections import OrderedDict
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -124,7 +125,16 @@ class PedagogicalService:
     def listArtifacts(self, *, studentId: UUID, studentLearningContextId: UUID, studentSubjectId: UUID, studentLearningUnitId: UUID) -> list[PedagogicalArtifactContract]:
         self._requireStudent(studentId)
         self._validateScope(studentId, studentLearningContextId, studentSubjectId, studentLearningUnitId)
-        return [self._toContract(model) for model in self.repository.listByStudentScope(studentId, studentLearningContextId, studentSubjectId, studentLearningUnitId)]
+        materials = self.materialRepository.listByStudentId(studentId)
+        return [
+            self._toContract(model, materials=materials)
+            for model in self.repository.listByStudentScope(
+                studentId,
+                studentLearningContextId,
+                studentSubjectId,
+                studentLearningUnitId,
+            )
+        ]
 
     def getArtifact(
         self,
@@ -413,16 +423,19 @@ class PedagogicalService:
     def _toContract(
         self,
         model: PedagogicalArtifactModel,
+        *,
+        materials: list | None = None,
     ) -> PedagogicalArtifactContract:
         content = self._publicContent(
             model.artifactType,
             model.contentJson,
         )
 
-        evidence = [
-            PedagogicalEvidenceContract.model_validate(item)
-            for item in (model.sourceEvidenceJson or [])
-        ]
+        evidence = self._consolidateEvidenceForPresentation(
+            model.sourceEvidenceJson or [],
+            materials=materials,
+            studentId=model.studentId,
+        )
 
         return PedagogicalArtifactContract(
             pedagogicalArtifactId=model.pedagogicalArtifactId,
@@ -455,6 +468,79 @@ class PedagogicalService:
             startedAt=model.startedAt,
             finishedAt=model.finishedAt,
         )
+
+    def _consolidateEvidenceForPresentation(
+        self,
+        sourceEvidence: list[dict],
+        *,
+        materials: list | None,
+        studentId: UUID,
+    ) -> list[PedagogicalEvidenceContract]:
+        """Expose one reviewed text per upload batch, while raw trace stays persisted."""
+        parsed = [
+            PedagogicalEvidenceContract.model_validate(item)
+            for item in sourceEvidence
+        ]
+        if not parsed:
+            return []
+
+        availableMaterials = (
+            materials
+            if materials is not None
+            else self.materialRepository.listByStudentId(studentId)
+        )
+        materialsById = {
+            material.materialId: material
+            for material in availableMaterials
+        }
+        groupPageCounts: dict[UUID, int] = {}
+        for material in availableMaterials:
+            if material.sourceGroupId is not None:
+                groupPageCounts[material.sourceGroupId] = (
+                    groupPageCounts.get(material.sourceGroupId, 0) + 1
+                )
+
+        grouped: OrderedDict[str, list[PedagogicalEvidenceContract]] = OrderedDict()
+        for item in parsed:
+            material = materialsById.get(item.materialId)
+            groupId = (
+                str(material.sourceGroupId)
+                if material is not None and material.sourceGroupId is not None
+                else str(item.materialId)
+            )
+            grouped.setdefault(groupId, []).append(item)
+
+        presentation = []
+        for items in grouped.values():
+            representative = items[0]
+            material = materialsById.get(representative.materialId)
+            pageCount = (
+                groupPageCounts.get(material.sourceGroupId, 1)
+                if material is not None and material.sourceGroupId is not None
+                else 1
+            )
+            title = (
+                f"Material consolidado · {pageCount} páginas"
+                if pageCount > 1
+                else "Texto estruturado individual"
+            )
+            excerpt = "\n\n".join(
+                item.excerpt.strip()
+                for item in items
+                if item.excerpt.strip()
+            )
+
+            presentation.append(
+                PedagogicalEvidenceContract(
+                    evidenceId=representative.evidenceId,
+                    materialId=representative.materialId,
+                    materialTitle=title,
+                    locator="Texto estruturado e auditado",
+                    excerpt=excerpt[:4000],
+                )
+            )
+
+        return presentation
 
     def _publicContent(
         self,

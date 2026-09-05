@@ -152,7 +152,9 @@ const materialGroups = computed<MaterialGroup[]>(() => {
         groupId,
         title: ordered.length > 1
           ? `Material consolidado · ${ordered.length} páginas`
-          : first.title,
+          : first.sourceFileRetained
+            ? first.title
+            : 'Texto estruturado individual',
         materialIds: ordered.map(item => item.materialId),
         pageCount: ordered.length,
         aiMode: first.aiMode
@@ -271,6 +273,7 @@ function typeLabel(type: PedagogicalArtifactType): string {
 }
 
 function evidenceKind(locator: string): string {
+  if (locator === 'Texto estruturado e auditado') return 'Material consolidado da Lia'
   if (locator.startsWith('Vision/OCR')) return 'Texto conferido pela Lia'
   if (locator.startsWith('OCR local')) return 'Trecho OCR normalizado'
   if (locator.startsWith('Vision')) return 'Leitura visual da Lia'
@@ -645,12 +648,12 @@ function confirmArchive(artifact: PedagogicalArtifactContract) {
             class="pedagogicalEvidenceDetails"
           >
             <summary>
-              Evidências usadas
+              Materiais consolidados usados
               ({{ selectedArtifact.sourceEvidence.length }})
             </summary>
 
             <p class="pedagogicalEvidenceIntro">
-              Trechos organizados para leitura. Após sucesso completo, a foto original é descartada; permanecem o texto, a leitura visual e os metadados estruturados.
+              A Lia usou somente textos estruturados e auditados dos materiais marcados acima. As fotos de origem não são usadas nesta atividade; a rastreabilidade técnica permanece protegida para auditoria.
             </p>
             <article
               v-for="(evidence, index) in selectedArtifact.sourceEvidence"

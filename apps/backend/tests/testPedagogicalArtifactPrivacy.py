@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from app.services.pedagogicalService import PedagogicalService
 
 
@@ -37,3 +39,43 @@ def testNonAssessmentContentIsPreserved():
     }
 
     assert service._publicContent("SUMMARY", content) == content
+
+
+def testEvidencePresentationConsolidatesUploadPagesWithoutDroppingAuditSource():
+    service = PedagogicalService.__new__(PedagogicalService)
+    student_id = uuid4()
+    group_id = uuid4()
+    first_material_id = uuid4()
+    second_material_id = uuid4()
+
+    class Material:
+        def __init__(self, material_id):
+            self.materialId = material_id
+            self.sourceGroupId = group_id
+
+    evidence = service._consolidateEvidenceForPresentation(
+        [
+            {
+                "evidenceId": str(uuid4()),
+                "materialId": str(first_material_id),
+                "materialTitle": "WhatsApp Image page 1",
+                "locator": "Vision/OCR · página 1",
+                "excerpt": "Texto revisado da página 1.",
+            },
+            {
+                "evidenceId": str(uuid4()),
+                "materialId": str(second_material_id),
+                "materialTitle": "WhatsApp Image page 2",
+                "locator": "Vision/OCR · página 2",
+                "excerpt": "Texto revisado da página 2.",
+            },
+        ],
+        materials=[Material(first_material_id), Material(second_material_id)],
+        studentId=student_id,
+    )
+
+    assert len(evidence) == 1
+    assert evidence[0].materialTitle == "Material consolidado · 2 páginas"
+    assert evidence[0].locator == "Texto estruturado e auditado"
+    assert "página 1" in evidence[0].excerpt
+    assert "página 2" in evidence[0].excerpt
