@@ -30,6 +30,7 @@ class ImageJobRequest(BaseModel):
     height: int = Field(default=576, ge=512, le=1024, multiple_of=64)
     seed: int | None = None
     steps: int = Field(default=9, ge=1, le=20)
+    textPolicy: Literal['NO_TEXT', 'IN_SCENE_MARKS'] = 'NO_TEXT'
 
 
 class ImageJobResponse(BaseModel):
@@ -139,7 +140,9 @@ class ZImageRuntime:
                     candidate = self.pipeline(
                         prompt=(
                             job.request.prompt
-                            + " Strict quality rule: scene only, absolutely no typography or writing."
+                            + (" Only small marks on historical objects; no overlaid captions."
+                               if job.request.textPolicy == 'IN_SCENE_MARKS' else
+                               " Strict quality rule: scene only, absolutely no typography or writing.")
                         ),
                         width=job.request.width,
                         height=job.request.height,
@@ -147,7 +150,7 @@ class ZImageRuntime:
                         guidance_scale=0.0,
                         generator=generator,
                     ).images[0]
-                    if self._containsDetectedText(candidate):
+                    if self._containsDetectedText(candidate, allowSceneMarks=job.request.textPolicy == 'IN_SCENE_MARKS'):
                         logger.warning(
                             "Rejected Z-Image output with detected text requestId=%s attempt=%s",
                             job.request.requestId,
@@ -248,7 +251,7 @@ class ZImageRuntime:
         return image
 
     @staticmethod
-    def _containsDetectedText(image) -> bool:
+    def _containsDetectedText(image, allowSceneMarks=False) -> bool:
         """Reject readable typography; explanations are rendered by the UI."""
         import pytesseract
         from pytesseract import Output
@@ -257,15 +260,30 @@ class ZImageRuntime:
             image.convert("RGB"), lang="eng", config="--psm 11", output_type=Output.DICT
         )
         words = []
-        for text, confidence in zip(data.get("text", []), data.get("conf", [])):
+        for index, (text, confidence) in enumerate(zip(data.get("text", []), data.get("conf", []))):
             token = re.sub(r"[^A-Za-zÀ-ÿ]", "", str(text or ""))
             try:
                 score = float(confidence)
             except (TypeError, ValueError):
                 score = -1
             if len(token) >= 3 and score >= 35:
+                if allowSceneMarks and ZImageRuntime._smallInteriorMark(data, index, image.size):
+                    continue
                 words.append(token)
         return len(words) >= 2
+
+    @staticmethod
+    def _smallInteriorMark(data, index, size):
+        # Spatial tolerance, not a semantic guarantee. Large/marginal captions still fail.
+        width, height = size
+        try:
+            x, y = int(data['left'][index]), int(data['top'][index])
+            w, h = int(data['width'][index]), int(data['height'][index])
+        except (KeyError, IndexError, ValueError, TypeError):
+            return False
+        return (width * .12 <= x and x + w <= width * .88
+                and height * .15 <= y and y + h <= height * .88
+                and 0 < h <= height * .035 and 0 < w <= width * .16)
 
 
 class ImageJobCoordinator:

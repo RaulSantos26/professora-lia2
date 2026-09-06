@@ -8,23 +8,24 @@ import { ref } from 'vue'
 
 const require = createRequire(import.meta.url)
 const source = readFileSync(new URL('./useAgentTutorWorkspace.ts', import.meta.url), 'utf8')
-function setup(archiveThread, extraApi = {}) {
+function setup(archiveThread, extraApi = {}, imageApi = {}) {
+  let pollingStarts = 0
   const api = { archiveThread, ...extraApi }
   const module = { exports: {} }
   const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
   vm.runInNewContext(compiled, {
     exports: module.exports, module,
-    window: { setInterval: () => 1, clearInterval: () => {} },
+    window: { setInterval: () => { pollingStarts++; return 1 }, clearInterval: () => {} },
     require: name => name === 'vue' ? require('vue') : {
       AgentTutorApiService: class { constructor() { return api } },
-      VisualTaskApiService: class {}, ImageGenerationApiService: class {}
+      VisualTaskApiService: class {}, ImageGenerationApiService: class { constructor() { return imageApi } }
     }
   })
   const errors = []
   const workspace = module.exports.useAgentTutorWorkspace({ selectedStudent: ref({ studentId: 'student' }), showError: error => errors.push(error), setSuccess: () => {} })
   workspace.threads.value = [{ agentThreadId: 'first' }, { agentThreadId: 'second' }]
   workspace.conversation.value = { thread: { agentThreadId: 'first' } }
-  return { workspace, errors }
+  return { workspace, errors, pollingStarts: () => pollingStarts }
 }
 test('archiving removes only the selected conversation immediately', async () => {
   const { workspace } = setup(async (student, thread) => {
@@ -77,6 +78,24 @@ test('late polling response cannot restore a reset scope', async () => {
   assert.equal(workspace.threads.value.length, 0)
 })
 const context = { contextId: 'context', subjectId: 'subject', unitId: 'unit', title: 'Gate' }
+test('opening a finished chat resumes polling for its pending illustration', async () => {
+  const thread = { agentThreadId: 'first' }
+  const { workspace, pollingStarts } = setup(async () => {}, {
+    getConversation: async () => ({ thread, activeRun: null, messages: [{ visualTaskIds: [], imageTaskIds: ['image'] }] })
+  }, { get: async () => ({ imageTaskId: 'image', status: 'GENERATING' }) })
+  await workspace.selectThread(thread)
+  assert.equal(pollingStarts(), 1)
+})
+
+test('pending images cached from another conversation do not start polling', async () => {
+  const thread = { agentThreadId: 'second' }
+  const { workspace, pollingStarts } = setup(async () => {}, {
+    getConversation: async () => ({ thread, activeRun: null, messages: [] })
+  })
+  workspace.imageTasks.value = { old: { imageTaskId: 'old', status: 'GENERATING' } }
+  await workspace.selectThread(thread)
+  assert.equal(pollingStarts(), 0)
+})
 const request = { content: 'O que são recursos naturais?', requestedTextModelId: null, thinkingMode: 'AUTO', materialIds: [] }
 function sendingSetup(failSend = false) {
   let created = 0

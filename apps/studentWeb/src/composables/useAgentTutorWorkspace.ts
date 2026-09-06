@@ -177,7 +177,7 @@ export function useAgentTutorWorkspace(
       ?? null
     )
 
-    if (conversation.value.activeRun) {
+    if (conversation.value.activeRun || hasPendingConversationImages()) {
       startPolling()
     }
   }
@@ -282,7 +282,7 @@ export function useAgentTutorWorkspace(
     }
 
 
-    if (Object.values(imageTasks.value).some(task => ["QUEUED", "PREPARING", "GENERATING", "LABELING"].includes(task.status))) {
+    if (hasPendingConversationImages()) {
       return
     }
     stopPolling()
@@ -425,6 +425,12 @@ export function useAgentTutorWorkspace(
       loaded.forEach(task => { next[task.imageTaskId] = task })
       imageTasks.value = next
     }
+  }
+
+  function hasPendingConversationImages() {
+    return conversation.value?.messages.some(message => message.imageTaskIds.some(id =>
+      ["QUEUED", "PREPARING", "GENERATING", "LABELING"].includes(imageTasks.value[id]?.status)
+    )) ?? false
   }
 
   function startPolling() {

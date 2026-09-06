@@ -7,6 +7,7 @@ from app.database.databaseSessionFactory import DatabaseSessionFactory
 from app.domain.common.domainError import DomainError
 from app.repositories.imageGenerationRepository import ImageGenerationRepository
 from app.services.imageServiceClient import ImageServiceClient
+from app.services.imageBriefService import ImageBriefService
 
 
 logger = logging.getLogger(__name__)
@@ -55,10 +56,16 @@ class ImageGenerationWorker:
             taskId = task.imageTaskId
             session.commit()
             task = repository.findById(taskId)
+            task.message = 'A Lia está preparando a cena e a explicação da lição.'
+            session.commit()
+            prompt, textPolicy = ImageBriefService(session).prepare(task)
+            session.commit()
             client = ImageServiceClient()
-            payload = {"requestId": str(task.imageTaskId), "prompt": task.prompt, "title": task.title, "imageMode": task.imageMode, "labels": task.labelsJson or [], "width": 768, "height": 576, "steps": 9}
+            payload = {"requestId": str(task.imageTaskId), "prompt": prompt, "textPolicy": textPolicy, "title": task.title, "imageMode": task.imageMode, "labels": task.labelsJson or [], "width": 768, "height": 576, "steps": 9}
             remote = client.submit(payload)
             while remote.get("status") not in {"READY", "ERROR", "CANCELLED"} and not self._stopEvent.wait(self.pollSeconds):
+                self._apply(task, remote)
+                session.commit()
                 remote = client.get(str(task.imageTaskId))
             self._apply(task, remote)
             session.commit()

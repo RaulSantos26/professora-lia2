@@ -48,7 +48,8 @@ class ImageGenerationService:
             studentLearningUnitId,
         )
         title = self._title(instruction, imageMode)
-        labels = self._labels(instruction, learningContext)
+        # Publish the real explanation only after the asynchronous Lia brief is ready.
+        labels = self._labels(instruction, learningContext)[:2]
         model = ImageGenerationTaskModel(
             studentId=studentId, agentThreadId=agentThreadId, agentRunId=agentRunId,
             relatedVisualTaskId=relatedVisualTaskId, imageMode=imageMode,

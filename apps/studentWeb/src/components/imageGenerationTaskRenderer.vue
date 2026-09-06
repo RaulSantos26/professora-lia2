@@ -69,7 +69,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
 
     <p v-if="task.status === 'ERROR'" class="emptyState">{{ task.errorMessage ?? task.message }}</p>
 
-    <section v-if="task.status === 'READY' && task.labels.length" class="imageExplanation">
+    <section v-if="explanation" class="imageExplanation">
       <h5>Explicação da Lia</h5>
       <p v-if="explanation">{{ explanation.replace('Explicação visual: ', '') }}</p>
       <ul>
