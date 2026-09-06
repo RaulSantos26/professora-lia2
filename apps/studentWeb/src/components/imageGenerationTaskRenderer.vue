@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref } from 'vue'
 
 import type { ImageGenerationTaskContract } from '../contracts/imageGenerationContract'
 
 const props = defineProps<{ task: ImageGenerationTaskContract }>()
 const fullscreen = ref(false)
+const closeButton = ref<HTMLButtonElement | null>(null)
+const previewButton = ref<HTMLButtonElement | null>(null)
 const isMindMapCompanion = computed(() => props.task.imageMode === 'MIND_MAP_COMPANION')
 
 const contextLabels = computed(() =>
@@ -16,16 +18,22 @@ const explanation = computed(
   () => props.task.labels.find(label => label.startsWith('Explicação visual:')) ?? null
 )
 
-function openFullscreen() {
+async function openFullscreen() {
   fullscreen.value = true
+  await nextTick()
+  closeButton.value?.focus()
 }
 
 function closeFullscreen() {
   fullscreen.value = false
+  previewButton.value?.focus()
 }
 
 function handleKeydown(event: KeyboardEvent) {
+  if (!fullscreen.value) return
   if (event.key === 'Escape') closeFullscreen()
+  // The dialog currently has one interactive control; keep keyboard focus inside.
+  if (event.key === 'Tab') { event.preventDefault(); closeButton.value?.focus() }
 }
 
 window.addEventListener('keydown', handleKeydown)
@@ -39,16 +47,17 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
         <p class="eyebrow">Z-IMAGE · {{ task.imageMode === 'MIND_MAP_COMPANION' ? 'MAPA ILUSTRADO' : 'ILUSTRAÇÃO' }}</p>
         <h4>{{ task.title }}</h4>
       </div>
-      <span class="agentRunBadge">{{ task.progressPercent }}%</span>
+      <span class="agentRunBadge" role="status">{{ task.status === 'ERROR' ? 'Não concluída' : task.status === 'CANCELLED' ? 'Cancelada' : task.status === 'READY' ? 'Disponível' : `${task.progressPercent}%` }}</span>
     </header>
 
-    <p v-if="task.status !== 'READY'">{{ task.message }}</p>
+    <p v-if="task.status !== 'READY' && task.status !== 'ERROR'">{{ task.message }}</p>
     <div v-if="task.status !== 'READY' && task.status !== 'ERROR' && task.status !== 'CANCELLED'" class="operationProgressTrack">
       <div class="operationProgressValue" :style="{ width: `${task.progressPercent}%` }" />
     </div>
 
     <button
       v-if="task.status === 'READY' && task.assetUrl"
+      ref="previewButton"
       type="button"
       class="imagePreview"
       :aria-label="`Abrir ${task.title} em tela cheia`"
@@ -84,7 +93,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
             <p class="eyebrow">ILUSTRAÇÃO DIDÁTICA</p>
             <h3>{{ task.title }}</h3>
           </div>
-          <button type="button" class="closeFullscreen" @click="closeFullscreen">Fechar</button>
+          <button ref="closeButton" type="button" class="closeFullscreen" @click="closeFullscreen">Fechar</button>
         </header>
         <img :src="task.assetUrl" :alt="task.title" class="imageFullscreenImage" />
         <section class="fullscreenExplanation">

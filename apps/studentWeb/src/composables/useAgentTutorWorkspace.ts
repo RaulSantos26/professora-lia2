@@ -52,6 +52,7 @@ export function useAgentTutorWorkspace(
   const busy = ref(false)
   let pollTimer: number | null = null
   let lastActiveRunId: string | null = null
+  let stateVersion = 0
 
   const selectedThread = computed(
     () => conversation.value?.thread ?? null
@@ -66,14 +67,18 @@ export function useAgentTutorWorkspace(
       threads.value = []
       return
     }
-    threads.value = await api.listThreads(
-      options.selectedStudent.value.studentId,
+    const version = stateVersion
+    const studentId = options.selectedStudent.value.studentId
+    const loaded = await api.listThreads(
+      studentId,
       {
         studentLearningContextId: context.contextId,
         studentSubjectId: context.subjectId,
         studentLearningUnitId: context.unitId
       }
     )
+    if (version !== stateVersion || options.selectedStudent.value?.studentId !== studentId) return
+    threads.value = loaded
   }
 
   async function ensureContextThread(
@@ -133,14 +138,19 @@ export function useAgentTutorWorkspace(
 
     stopPolling()
 
-    conversation.value = await api.getConversation(
-      options.selectedStudent.value.studentId,
+    const version = ++stateVersion
+    const studentId = options.selectedStudent.value.studentId
+    const loaded = await api.getConversation(
+      studentId,
       thread.agentThreadId
     )
+    if (version !== stateVersion || options.selectedStudent.value?.studentId !== studentId) return
+    conversation.value = loaded
 
     await hydrateVisualTasks()
     await hydrateImageTasks()
 
+    if (version !== stateVersion) return
     lastActiveRunId = (
       conversation.value.activeRun?.agentRunId
       ?? null
@@ -196,15 +206,19 @@ export function useAgentTutorWorkspace(
     const studentId = options.selectedStudent.value.studentId
     const threadId = conversation.value.thread.agentThreadId
     const trackedRunId = lastActiveRunId
+    const version = stateVersion
 
-    conversation.value = await api.getConversation(
+    const loaded = await api.getConversation(
       studentId,
       threadId
     )
+    if (version !== stateVersion || options.selectedStudent.value?.studentId !== studentId || conversation.value?.thread.agentThreadId !== threadId) return
+    conversation.value = loaded
 
     await hydrateVisualTasks()
     await hydrateImageTasks()
 
+    if (version !== stateVersion || options.selectedStudent.value?.studentId !== studentId) return
     if (conversation.value.activeRun) {
       lastActiveRunId = conversation.value.activeRun.agentRunId
       return
@@ -216,6 +230,7 @@ export function useAgentTutorWorkspace(
         threadId,
         trackedRunId
       )
+      if (version !== stateVersion || options.selectedStudent.value?.studentId !== studentId) return
 
       if (
         terminalRun.status === 'QUEUED'
@@ -280,32 +295,40 @@ export function useAgentTutorWorkspace(
     if (
       !options.selectedStudent.value
       || !conversation.value
+      || busy.value
     ) {
       return
     }
 
+    const studentId = options.selectedStudent.value.studentId
+    const threadId = conversation.value.thread.agentThreadId
+    busy.value = true
     try {
       await api.archiveThread(
-        options.selectedStudent.value.studentId,
-        conversation.value.thread.agentThreadId
+        studentId,
+        threadId
       )
-      conversation.value = null
-      visualTasks.value = {}
-    imageTasks.value = {}
-      imageTasks.value = {}
-      await loadThreads({
-        contextId: conversation.value?.thread.studentLearningContextId ?? null,
-        subjectId: conversation.value?.thread.studentSubjectId ?? null,
-        unitId: conversation.value?.thread.studentLearningUnitId ?? null,
-        title: ''
-      })
+      if (options.selectedStudent.value?.studentId !== studentId) return
+      threads.value = threads.value.filter(thread => thread.agentThreadId !== threadId)
+      if (conversation.value?.thread.agentThreadId === threadId) {
+        stateVersion++
+        stopPolling()
+        lastActiveRunId = null
+        conversation.value = null
+        visualTasks.value = {}
+        imageTasks.value = {}
+      }
       options.setSuccess('Conversa arquivada.')
     } catch (error) {
       options.showError(error)
+    } finally {
+      busy.value = false
     }
   }
 
   async function hydrateVisualTasks() {
+    const version = stateVersion
+    const studentId = options.selectedStudent.value?.studentId
     if (
       !options.selectedStudent.value
       || !conversation.value
@@ -341,6 +364,7 @@ export function useAgentTutorWorkspace(
     const next = {
       ...visualTasks.value
     }
+    if (version !== stateVersion || options.selectedStudent.value?.studentId !== studentId) return
 
     loaded.forEach(task => {
       next[task.visualTaskId] = task
@@ -351,10 +375,13 @@ export function useAgentTutorWorkspace(
 
   async function hydrateImageTasks() {
     if (!options.selectedStudent.value || !conversation.value) return
+    const version = stateVersion
+    const studentId = options.selectedStudent.value.studentId
     const ids = Array.from(new Set(conversation.value.messages.flatMap(message => message.imageTaskIds)))
     const missing = ids.filter(id => !imageTasks.value[id])
     if (missing.length > 0) {
       const loaded = await Promise.all(missing.map(id => imageApi.get(options.selectedStudent.value!.studentId, id)))
+      if (version !== stateVersion || options.selectedStudent.value?.studentId !== studentId) return
       const next = { ...imageTasks.value }
       loaded.forEach(task => { next[task.imageTaskId] = task })
       imageTasks.value = next
@@ -365,6 +392,7 @@ export function useAgentTutorWorkspace(
     })
     if (activeIds.length > 0) {
       const loaded = await Promise.all(activeIds.map(id => imageApi.get(options.selectedStudent.value!.studentId, id)))
+      if (version !== stateVersion || options.selectedStudent.value?.studentId !== studentId) return
       const next = { ...imageTasks.value }
       loaded.forEach(task => { next[task.imageTaskId] = task })
       imageTasks.value = next
@@ -401,6 +429,7 @@ export function useAgentTutorWorkspace(
 
   function reset() {
 
+    stateVersion++
     stopPolling()
     threads.value = []
     conversation.value = null

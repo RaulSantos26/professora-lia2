@@ -8,6 +8,7 @@ import {
 
 import VisualTaskRenderer from './visualTaskRenderer.vue'
 import ImageGenerationTaskRenderer from './imageGenerationTaskRenderer.vue'
+import StudyText from './studyText'
 
 import type {
   AgentConversationContract,
@@ -282,7 +283,7 @@ function openPedagogicalAction(
   <section class="liaTutorWorkspace">
     <header class="liaTutorHeader">
       <div>
-        <p class="eyebrow">AGENTIC TUTOR</p>
+        <p class="eyebrow">CONVERSAR E APRENDER</p>
         <h2>Lia</h2>
         <p>
           Converse sobre seus materiais. A Lia pode consultar evidências,
@@ -458,7 +459,8 @@ function openPedagogicalAction(
               <strong>
                 {{ item.role === 'USER' ? 'Você' : 'Lia' }}
               </strong>
-              <p>{{ item.content }}</p>
+              <StudyText v-if="item.role === 'ASSISTANT'" :text="item.content" />
+              <p v-else>{{ item.content }}</p>
             </div>
 
             <details
@@ -469,7 +471,7 @@ function openPedagogicalAction(
               class="liaCitationDetails"
             >
               <summary>
-                Evidências ({{ item.citations.length }})
+                Consultar trechos usados na resposta ({{ item.citations.length }})
               </summary>
 
               <article
@@ -567,7 +569,9 @@ function openPedagogicalAction(
           class="liaComposer"
           @submit.prevent="submit"
         >
-          <div class="liaComposerOptions">
+          <details class="liaAdvancedSettings">
+            <summary>Configurações avançadas (opcional)</summary>
+            <div class="liaComposerOptions">
             <label>
               Modelo
               <select v-model="modelId">
@@ -583,14 +587,15 @@ function openPedagogicalAction(
             </label>
 
             <label>
-              Thinking
+              Raciocínio do modelo
               <select v-model="thinkingMode">
                 <option value="AUTO">Automático (mais estável)</option>
                 <option value="ON">Sempre usar</option>
                 <option value="OFF">Desativado</option>
               </select>
             </label>
-          </div>
+            </div>
+          </details>
 
           <details class="liaMaterialScope">
             <summary>
@@ -599,7 +604,7 @@ function openPedagogicalAction(
             </summary>
 
             <p class="emptyState">
-              Cada lote de fotos é um único texto organizado e auditado para esta lição.
+              Textos extraídos dos materiais desta lição, agrupados por envio. A extração ainda pode conter erros.
             </p>
 
             <label
@@ -623,6 +628,7 @@ function openPedagogicalAction(
               v-model="message"
               rows="3"
               placeholder="Pergunte à Lia..."
+              aria-label="Sua pergunta para a Lia"
               :disabled="Boolean(activeRun)"
               @keydown.ctrl.enter="submit"
             />
@@ -644,3 +650,15 @@ function openPedagogicalAction(
     </div>
   </section>
 </template>
+
+<style scoped>
+.liaAdvancedSettings > summary { cursor: pointer; padding: 12px 0; min-height: 44px; }
+.liaAdvancedSettings .liaComposerOptions { margin-bottom: 12px; }
+:deep(.studyText) { font-size: 1rem; line-height: 1.65; overflow-wrap: anywhere; white-space: normal; }
+:deep(.studyText p), :deep(.studyText h4) { margin: .65em 0; }
+:deep(.studyText ul), :deep(.studyText ol) { padding-left: 1.5em; margin: .65em 0; }
+:deep(.studyText li) { margin: .35em 0; }
+:deep(.studyText strong) { font-size: inherit; line-height: inherit; }
+:deep(.studyText pre) { white-space: pre-wrap; padding: 12px; background: #f4f7fc; border-radius: 8px; }
+.liaPromptSuggestions button, .liaSendButton { min-height: 44px; }
+</style>

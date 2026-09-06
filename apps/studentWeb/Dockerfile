@@ -6,7 +6,9 @@ COPY package.json .
 RUN npm install
 
 COPY . .
-RUN npm run build
+RUN npx tsc --noEmit \
+    && node --experimental-strip-types --test src/components/studyText.test.mjs src/composables/tutorArchive.test.mjs \
+    && npm run build
 
 FROM nginx:stable-alpine
 
