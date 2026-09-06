@@ -52,13 +52,15 @@ const emit = defineEmits<{
     requestedTextModelId: string | null
     thinkingMode: 'AUTO' | 'ON' | 'OFF'
     materialIds: string[]
-  }]
+  }, done: (result: { accepted: boolean; error?: string }) => void]
   archiveThread: []
   retryLastRun: []
   openPedagogical: [artifactId: string]
 }>()
 
 const message = ref('')
+const sending = ref(false)
+const sendFailure = ref('')
 const modelId = ref('')
 const thinkingMode = ref<'AUTO' | 'ON' | 'OFF'>('AUTO')
 const selectedMaterialIds = ref<string[]>([])
@@ -239,20 +241,25 @@ function submit() {
 
   if (
     content.length < 1
+    || sending.value
     || activeRun.value
     || props.busy
   ) {
     return
   }
 
+  sending.value = true
+  sendFailure.value = ''
   emit('send', {
     content,
     requestedTextModelId: modelId.value || null,
     thinkingMode: thinkingMode.value,
     materialIds: [...selectedMaterialIds.value]
+  }, result => {
+    sending.value = false
+    sendFailure.value = result.error ?? ''
+    if (result.accepted && message.value.trim() === content) message.value = ''
   })
-
-  message.value = ''
 }
 
 function actionArtifactId(
@@ -569,6 +576,8 @@ function openPedagogicalAction(
           class="liaComposer"
           @submit.prevent="submit"
         >
+          <p v-if="sendFailure" role="alert" class="liaSendFailure">{{ sendFailure }}</p>
+          <p v-if="sending" role="status">Enviando sua pergunta...</p>
           <details class="liaAdvancedSettings">
             <summary>Configurações avançadas (opcional)</summary>
             <div class="liaComposerOptions">
@@ -629,7 +638,7 @@ function openPedagogicalAction(
               rows="3"
               placeholder="Pergunte à Lia..."
               aria-label="Sua pergunta para a Lia"
-              :disabled="Boolean(activeRun)"
+              :disabled="Boolean(activeRun) || sending"
               @keydown.ctrl.enter="submit"
             />
 
@@ -638,6 +647,7 @@ function openPedagogicalAction(
               class="liaSendButton"
               :disabled="
                 Boolean(activeRun)
+                || sending
                 || busy
                 || message.trim().length === 0
               "
@@ -653,6 +663,7 @@ function openPedagogicalAction(
 
 <style scoped>
 .liaAdvancedSettings > summary { cursor: pointer; padding: 12px 0; min-height: 44px; }
+.liaSendFailure { padding: 12px; border: 1px solid #dc8b8b; border-radius: 8px; color: #8b1a1a; background: #fff4f4; }
 .liaAdvancedSettings .liaComposerOptions { margin-bottom: 12px; }
 :deep(.studyText) { font-size: 1rem; line-height: 1.65; overflow-wrap: anywhere; white-space: normal; }
 :deep(.studyText p), :deep(.studyText h4) { margin: .65em 0; }

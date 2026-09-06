@@ -53,6 +53,9 @@ export function useAgentTutorWorkspace(
   let pollTimer: number | null = null
   let lastActiveRunId: string | null = null
   let stateVersion = 0
+  let currentContext: TutorContext | null = null
+  let contextLoading: Promise<void> | null = null
+  let contextKey = ''
 
   const selectedThread = computed(
     () => conversation.value?.thread ?? null
@@ -81,8 +84,24 @@ export function useAgentTutorWorkspace(
     threads.value = loaded
   }
 
-  async function ensureContextThread(
-    context: TutorContext
+  function ensureContextThread(context: TutorContext): Promise<void> {
+    const key = JSON.stringify([options.selectedStudent.value?.studentId, context])
+    if (contextLoading && key === contextKey) return contextLoading
+    currentContext = { ...context }
+    contextKey = key
+    const version = ++stateVersion
+    stopPolling()
+    conversation.value = null
+    const pending = prepareContextThread(context, version).finally(() => {
+      if (contextLoading === pending) contextLoading = null
+    })
+    contextLoading = pending
+    return pending
+  }
+
+  async function prepareContextThread(
+    context: TutorContext,
+    version: number
   ) {
     if (
       !options.selectedStudent.value
@@ -95,6 +114,7 @@ export function useAgentTutorWorkspace(
     }
 
     await loadThreads(context)
+    if (version !== stateVersion) return
 
     const matching = threads.value.find(
       thread =>
@@ -120,6 +140,7 @@ export function useAgentTutorWorkspace(
         studentLearningUnitId: context.unitId
       }
     )
+    if (version !== stateVersion) return
 
     threads.value = [
       created,
@@ -168,28 +189,35 @@ export function useAgentTutorWorkspace(
       thinkingMode: 'AUTO' | 'ON' | 'OFF'
       materialIds: string[]
     }
-  ) {
-    if (
-      !options.selectedStudent.value
-      || !conversation.value
-    ) {
-      return
-    }
-
+  ): Promise<{ accepted: boolean; error?: string }> {
+    if (busy.value) return { accepted: false, error: 'Aguarde o envio atual terminar.' }
     busy.value = true
-
+    let accepted = false
     try {
+      const context = currentContext
+      if (!options.selectedStudent.value || !context?.contextId || !context.subjectId || !context.unitId) {
+        return { accepted: false, error: 'Escolha a matéria e a lição antes de enviar. Sua pergunta foi mantida.' }
+      }
+      if (contextLoading) await contextLoading
+      if (!conversation.value) await ensureContextThread(context)
+      if (!conversation.value || currentContext?.contextId !== context.contextId || currentContext?.subjectId !== context.subjectId || currentContext?.unitId !== context.unitId) {
+        return { accepted: false, error: 'A lição mudou durante o envio. Confira a seleção e tente novamente.' }
+      }
       const run = await api.sendMessage(
         options.selectedStudent.value.studentId,
         conversation.value.thread.agentThreadId,
         request
       )
-
+      accepted = true
       lastActiveRunId = run.agentRunId
-      await refreshConversation()
       startPolling()
-    } catch (error) {
-      options.showError(error)
+      await refreshConversation()
+      return { accepted: true }
+    } catch {
+      // The composer displays this failure next to the preserved draft.
+      return { accepted, error: accepted
+        ? 'Sua pergunta foi recebida, mas não foi possível atualizar a resposta. Aguarde a reconexão.'
+        : 'Não foi possível enviar. Sua pergunta foi mantida; tente novamente.' }
     } finally {
       busy.value = false
     }
@@ -429,6 +457,9 @@ export function useAgentTutorWorkspace(
 
   function reset() {
 
+    currentContext = null
+    contextLoading = null
+    contextKey = ''
     stateVersion++
     stopPolling()
     threads.value = []

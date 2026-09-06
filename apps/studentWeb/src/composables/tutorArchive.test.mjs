@@ -14,6 +14,7 @@ function setup(archiveThread, extraApi = {}) {
   const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
   vm.runInNewContext(compiled, {
     exports: module.exports, module,
+    window: { setInterval: () => 1, clearInterval: () => {} },
     require: name => name === 'vue' ? require('vue') : {
       AgentTutorApiService: class { constructor() { return api } },
       VisualTaskApiService: class {}, ImageGenerationApiService: class {}
@@ -74,4 +75,42 @@ test('late polling response cannot restore a reset scope', async () => {
   await polling
   assert.equal(workspace.conversation.value, null)
   assert.equal(workspace.threads.value.length, 0)
+})
+const context = { contextId: 'context', subjectId: 'subject', unitId: 'unit', title: 'Gate' }
+const request = { content: 'O que são recursos naturais?', requestedTextModelId: null, thinkingMode: 'AUTO', materialIds: [] }
+function sendingSetup(failSend = false) {
+  let created = 0
+  let sent = 0
+  const thread = { agentThreadId: 'created', studentLearningContextId: 'context', studentSubjectId: 'subject', studentLearningUnitId: 'unit' }
+  const result = setup(async () => {}, {
+    listThreads: async () => [],
+    createThread: async () => { created++; return thread },
+    getConversation: async () => ({ thread, messages: [], activeRun: null }),
+    sendMessage: async () => { sent++; if (failSend) throw new Error('offline'); return { agentRunId: 'run' } },
+    getRun: async () => ({ status: 'READY' })
+  })
+  return { ...result, counts: () => ({ created, sent }) }
+}
+test('send after archive recreates the scoped conversation and reaches API', async () => {
+  const { workspace, counts } = sendingSetup()
+  await workspace.ensureContextThread(context)
+  await workspace.archiveCurrentThread()
+  assert.equal(workspace.conversation.value, null)
+  const result = await workspace.sendMessage(request)
+  assert.equal(result.accepted, true)
+  assert.deepEqual(counts(), { created: 2, sent: 1 })
+})
+test('send failure explicitly returns nonacceptance to preserve the draft', async () => {
+  const { workspace } = sendingSetup(true)
+  await workspace.ensureContextThread(context)
+  const result = await workspace.sendMessage(request)
+  assert.equal(result.accepted, false)
+  assert.ok(result.error.includes('mantida'))
+  assert.equal(workspace.busy.value, false)
+})
+test('send without scope gives an explicit error instead of silent return', async () => {
+  const { workspace } = setup(async () => {})
+  const result = await workspace.sendMessage(request)
+  assert.equal(result.accepted, false)
+  assert.ok(result.error.includes('matéria'))
 })

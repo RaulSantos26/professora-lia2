@@ -1060,7 +1060,7 @@ onMounted(async () => {
         @select-thread="selectTutorThread"
         @select-subject="selectMaterialSubject"
         @select-unit="selectMaterialUnit"
-        @send="sendTutorMessage"
+        @send="(request, done) => sendTutorMessage(request).then(done)"
         @retry-last-run="retryTutorRun"
         @archive-thread="archiveTutorThread"
         @open-pedagogical="openPedagogicalFromTutor"
