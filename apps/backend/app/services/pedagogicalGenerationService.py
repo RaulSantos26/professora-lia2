@@ -119,6 +119,12 @@ class PedagogicalGenerationService:
                 "Use exatamente um nó raiz, identificado por rootId; cada "
                 "outro nó deve apontar para um parentId existente. Nunca "
                 "deixe todos os nós com parentId nulo."
+                " Organize de 4 a 7 ramos principais quando as evidências permitirem, "
+                "com até 3 conceitos subordinados por ramo. Títulos até 48 caracteres "
+                "e detalhes até 160 caracteres, sem perder o significado. "
+                "Escolha em icon um único emoji que represente semanticamente cada conceito, "
+                "ou uma string vazia se não houver representação adequada. "
+                "Não escolha exemplos fora do material nem force tópicos para preencher quantidade."
             ),
             "FLASHCARDS": (
                 "Crie flashcards de revisão cobrindo os conceitos centrais."
@@ -222,8 +228,9 @@ EVIDÊNCIAS:
                                 "parentId": {
                                     "type": ["string", "null"],
                                 },
-                                "label": {"type": "string"},
-                                "detail": {"type": "string"},
+                                "label": {"type": "string", "minLength": 1, "maxLength": 48},
+                                "detail": {"type": "string", "maxLength": 160},
+                                "icon": {"type": "string", "maxLength": 12},
                                 "evidenceRefs": {
                                     "type": "array",
                                     "items": {"type": "integer"},

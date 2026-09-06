@@ -164,10 +164,10 @@ function toggleCard(cardId: string) {
 
     <template v-else-if="artifact.artifactType === 'MIND_MAP'">
       <InteractiveMindMapRenderer :spec="content" />
-      <ImageGenerationTaskRenderer
-        v-if="imageTask"
-        :task="imageTask"
-      />
+      <details v-if="imageTask">
+        <summary>Ilustração antiga associada (não é o mapa atualizado)</summary>
+        <ImageGenerationTaskRenderer :task="imageTask" />
+      </details>
     </template>
 
     <div

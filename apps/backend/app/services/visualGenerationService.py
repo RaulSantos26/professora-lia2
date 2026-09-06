@@ -35,6 +35,10 @@ REGRAS:
 - em ANIMATION_2D, organize uma narrativa em 3 momentos observáveis;
 - posições geométricas serão calculadas por uma Skill Python;
 - referências de evidência devem usar índices 1..N.
+- Em MIND_MAP, use uma raiz e 4 a 7 ramos principais se as evidências permitirem,
+  até 3 conceitos subordinados por ramo, títulos curtos e explicações concisas.
+  Escolha um único emoji em icon pela semântica do conceito, ou string vazia.
+  Nunca invente conteúdo para preencher a quantidade de ramos.
 
 TIPO VISUAL:
 {visualType}
@@ -73,8 +77,9 @@ as evidências do aluno continuam sendo a fonte de verdade):
                                 "parentId": {
                                     "type": ["string", "null"],
                                 },
-                                "label": {"type": "string"},
-                                "detail": {"type": "string"},
+                                "label": {"type": "string", "minLength": 1, "maxLength": 48},
+                                "detail": {"type": "string", "maxLength": 160},
+                                "icon": {"type": "string", "maxLength": 12},
                                 "evidenceRefs": {
                                     "type": "array",
                                     "items": {"type": "integer"},

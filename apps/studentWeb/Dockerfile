@@ -7,7 +7,7 @@ RUN npm install
 
 COPY . .
 RUN npx tsc --noEmit \
-    && node --experimental-strip-types --test src/components/studyText.test.mjs src/composables/tutorArchive.test.mjs \
+    && node --experimental-strip-types --test src/components/studyText.test.mjs src/components/mindMapDocument.test.mjs src/composables/tutorArchive.test.mjs \
     && npm run build
 
 FROM nginx:stable-alpine
