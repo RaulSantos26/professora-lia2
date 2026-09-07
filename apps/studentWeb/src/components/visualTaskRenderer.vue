@@ -36,6 +36,7 @@ defineProps<{
     <InteractiveMindMapRenderer
       v-if="task.visualType === 'MIND_MAP'"
       :spec="task.spec"
+      :student-id="task.studentId"
     />
 
     <DiagramSvgRenderer

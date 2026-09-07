@@ -621,8 +621,8 @@ function confirmArchive(artifact: PedagogicalArtifactContract) {
             v-else-if="selectedArtifact.status === 'FAILED'"
             class="materialErrorSummary"
           >
-            <strong>{{ selectedArtifact.errorCode }}</strong>
-            <span>{{ selectedArtifact.errorMessage }}</span>
+            <strong>Não foi possível concluir esta atividade.</strong>
+            <span>{{ /OLLAMA_CONTEXT_EXCEEDED|OLLAMA_OUTPUT_LIMIT/.test(selectedArtifact.errorCode ?? '') || /exceeds the available context|n_ctx|n_prompt_tokens/.test(selectedArtifact.errorMessage ?? '') ? 'Este material precisa ser organizado em partes. Tente novamente; seus materiais foram preservados.' : selectedArtifact.errorCode === 'OLLAMA_HTTP_ERROR' ? 'O serviço de geração não conseguiu responder desta vez. Tente novamente.' : selectedArtifact.errorMessage }}</span>
           </div>
 
           <PedagogicalArtifactRenderer

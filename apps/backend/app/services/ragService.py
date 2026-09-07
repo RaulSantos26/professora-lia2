@@ -14,6 +14,7 @@ from app.repositories.ragRepository import RagCandidate, RagRepository
 from app.repositories.studentRepository import StudentRepository
 from app.services.capabilityRouterService import CapabilityRouterService
 from app.services.contentGuardService import ContentGuardService
+from app.services.evidenceCurationService import EvidenceCurationService
 from app.services.ollamaClientService import OllamaClientService
 from app.services.thinkingPolicyService import ThinkingPolicyService
 
@@ -58,6 +59,8 @@ class RagService:
             studentLearningUnitId=request.studentLearningUnitId,
             materialIds=request.materialIds,
         )
+
+        candidates = EvidenceCurationService().curateCandidates(candidates)
 
         if not candidates:
             raise DomainError(

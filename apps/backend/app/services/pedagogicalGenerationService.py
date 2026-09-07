@@ -1,4 +1,7 @@
 from app.services.ollamaClientService import OllamaClientService
+from app.services.mindMapContentService import generateMindMap
+from app.services.contextBudgetService import ContextBudgetService
+from app.services.hierarchicalContextService import HierarchicalContextService
 
 
 class PedagogicalGenerationService:
@@ -15,7 +18,12 @@ class PedagogicalGenerationService:
         questionCount: int,
         modelId: str,
         thinkingEnabled: bool,
+        evidence: list[dict] | None = None,
+        progress=None,
+        learnerLevel: str | None = None,
     ) -> dict:
+        if learnerLevel:
+            instruction = f'Adapte a profundidade, o vocabulário e os exemplos ao nível cadastrado: {learnerLevel}. Não infantilize o material.\n' + (instruction or '')
         schema = self._schema(
             artifactType,
             questionCount,
@@ -28,16 +36,38 @@ class PedagogicalGenerationService:
             questionCount=questionCount,
         )
 
+        coverage = None
+        if progress: progress('Preparando o material de estudo com base nas evidências selecionadas.')
+        if artifactType == 'MIND_MAP':
+            from app.services.mindMapContentService import MindMapContent, MINDMAP_RULES
+            schema = MindMapContent.model_json_schema()
+            extra = MINDMAP_RULES
+        else: extra = ''
+        budget = ContextBudgetService()
+        if not budget.fits(prompt + extra, schema, thinking=thinkingEnabled) and evidence:
+            emptyPrompt = self._prompt(artifactType=artifactType, context='', instruction=instruction, difficulty=difficulty, questionCount=questionCount) + extra
+            target = max(0, budget.evidenceBudget(emptyPrompt, schema, thinking=thinkingEnabled) - 512)
+            context, coverage = HierarchicalContextService(self.ollama).prepare(evidence, modelId=modelId, thinking=thinkingEnabled, targetTokens=target, progress=progress)
+            prompt = self._prompt(artifactType=artifactType, context=context, instruction=instruction, difficulty=difficulty, questionCount=questionCount)
+
+        if artifactType == 'MIND_MAP':
+            result = generateMindMap(self.ollama, modelId=modelId, prompt=prompt, think=thinkingEnabled,
+                evidenceCount=len(evidence) if evidence is not None else None)
+            if coverage: result['coverage'] = coverage
+            return result
+
         result = self.ollama.chatStructured(
             modelId=modelId,
             prompt=prompt,
             schema=schema,
             think=thinkingEnabled,
+            timeoutSeconds=budget.generationTimeout(thinking=thinkingEnabled),
         )
 
         if artifactType == "MIND_MAP":
             return self._normalizeMindMap(result)
 
+        if coverage: result['coverage'] = coverage
         return result
 
     def _normalizeMindMap(self, content: dict) -> dict:

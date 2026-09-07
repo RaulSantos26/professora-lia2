@@ -35,3 +35,15 @@ test('semantic icons supplied by content are optional and never markup', () => {
   nodes[1].icon = '🌿'
   assert.ok(mindSvg(mindDocument({ nodes })).svg.includes('🌿'))
 })
+
+test('branch image is embedded raster and arbitrary URLs are rejected', () => {
+  const doc = mindDocument({ nodes: [{ nodeId: 'r', parentId: null, label: 'Tema' }, { nodeId: 'a', parentId: 'r', label: 'Ramo' }] })
+  assert.ok(mindSvg(doc, { a: 'data:image/png;base64,aGVsbG8=' }).svg.includes('<image'))
+  assert.ok(!mindSvg(doc, { a: 'https://example.com/x.svg' }).svg.includes('<image'))
+  assert.ok(!mindSvg(doc, { a: 'data:image/svg+xml;base64,aGVsbG8=' }).svg.includes('<image'))
+})
+test('sequence template is structural rather than topic dependent', () => {
+  const doc = mindDocument({ relationship: 'SEQUENCE', nodes: [{ nodeId: 'r', parentId: null, label: 'Tema' }, { nodeId: 'a', parentId: 'r', label: 'Etapa' }] })
+  assert.ok(mindSvg(doc).svg.includes('width="1360"'))
+  assert.ok(mindSvg({ ...doc, relationship: 'PARALLEL' }).svg.includes('width="700"'))
+})

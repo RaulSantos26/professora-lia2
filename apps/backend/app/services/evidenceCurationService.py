@@ -8,17 +8,18 @@ class EvidenceCurationService:
         # A Vision transcription is a reviewed replacement for noisy local OCR
         # from the same photographed page. Retain the raw OCR in storage/audit,
         # but do not feed it to the student-facing pedagogical context.
-        reviewedMaterialIds = {
-            item.materialId
+        reviewedPages = {
+            (item.materialId, item.documentPageId)
             for item in candidates
             if item.locator.startswith("Vision/OCR")
+            and getattr(item, "documentPageId", None) is not None
             and len(item.content.strip()) >= 80
         }
         return [
             item
             for item in candidates
             if not (
-                item.materialId in reviewedMaterialIds
+                (item.materialId, getattr(item, "documentPageId", None)) in reviewedPages
                 and item.locator.startswith("OCR local")
             )
         ]

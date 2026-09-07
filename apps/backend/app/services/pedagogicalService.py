@@ -183,6 +183,8 @@ class PedagogicalService:
             studentSubjectId=artifact.studentSubjectId,
             studentLearningUnitId=artifact.studentLearningUnitId,
             focusQuery=artifact.instruction,
+            globalCoverage=(artifact.artifactType != 'EXPLAIN' or not artifact.instruction or bool(re.search(
+                r'\b(tod[oa]s?|complet[oa]|inteir[oa]|capítulo|capitulo)\b', artifact.instruction, re.I))),
         )
 
         artifact.sourceMaterialIds = [
@@ -229,6 +231,15 @@ class PedagogicalService:
         artifact.message = "A Lia está preparando o conteúdo."
         self.session.commit()
 
+        def reportProgress(message):
+            artifact.message = message
+            self.session.commit()
+
+        from app.persistence.models.academicStageModel import AcademicStageModel
+        _, _, learningContext = self.ownership.assertUnitBelongsToStudent(artifact.studentLearningUnitId, artifact.studentId)
+        stage = self.session.get(AcademicStageModel, learningContext.academicStageId) if learningContext.academicStageId else None
+        learnerLevel = (stage.educationLevel + ' / ' + stage.stageLabel) if stage and stage.studentId == artifact.studentId else None
+
         content = self.generator.generate(
             artifactType=artifact.artifactType,
             context=context,
@@ -237,8 +248,16 @@ class PedagogicalService:
             questionCount=artifact.questionCount or 8,
             modelId=decision.effectiveModelId,
             thinkingEnabled=thinkingEnabled,
+            evidence=evidence,
+            progress=reportProgress,
+            learnerLevel=learnerLevel,
         )
 
+        if artifact.artifactType == 'MIND_MAP':
+            from app.services.mindMapAssetService import MindMapAssetService
+            content = MindMapAssetService(self.session).attach(content,
+                studentId=artifact.studentId, unitId=artifact.studentLearningUnitId,
+                materialIds=selectedIds, evidence=evidence, artifactId=artifact.pedagogicalArtifactId)
         content["resolvedDifficulty"] = difficulty
 
         self.repository.complete(
@@ -247,8 +266,7 @@ class PedagogicalService:
             effectiveTextModelId=decision.effectiveModelId,
             sourceEvidence=evidence,
         )
-        # MIND_MAP is rendered by the structured visual engine.  Do not create
-        # a raster companion: generated text makes it unreadable and duplicates the map.
+        # Content is ready immediately; scene-only branch images run in the existing queue.
         self.session.commit()
 
     def submitAttempt(

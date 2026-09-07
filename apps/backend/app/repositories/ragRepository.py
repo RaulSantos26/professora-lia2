@@ -1,11 +1,12 @@
 from dataclasses import dataclass
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.persistence.models.documentChunkModel import DocumentChunkModel
 from app.persistence.models.documentModel import DocumentModel
+from app.persistence.models.documentPageModel import DocumentPageModel
 from app.persistence.models.documentVersionModel import DocumentVersionModel
 from app.persistence.models.evidenceModel import EvidenceModel
 from app.persistence.models.materialModel import MaterialModel
@@ -23,6 +24,9 @@ class RagCandidate:
     content: str
     embedding: list[float]
     embeddingModelId: str
+    documentPageId: UUID | None = None
+    pageNumber: int | None = None
+    chunkIndex: int | None = None
 
 
 class RagRepository:
@@ -38,6 +42,14 @@ class RagRepository:
         studentLearningUnitId: UUID | None,
         materialIds: list[UUID],
     ) -> list[RagCandidate]:
+        latestVersions = (
+            select(
+                DocumentVersionModel.documentId,
+                func.max(DocumentVersionModel.versionNumber).label("latestVersionNumber"),
+            )
+            .group_by(DocumentVersionModel.documentId)
+            .subquery()
+        )
         statement = (
             select(
                 DocumentChunkModel.documentChunkId,
@@ -50,6 +62,9 @@ class RagRepository:
                 DocumentChunkModel.content,
                 DocumentChunkModel.embedding,
                 DocumentChunkModel.embeddingModelId,
+                DocumentChunkModel.documentPageId,
+                DocumentPageModel.pageNumber,
+                DocumentChunkModel.chunkIndex,
             )
             .join(
                 DocumentVersionModel,
@@ -60,6 +75,16 @@ class RagRepository:
                 DocumentModel,
                 DocumentModel.documentId
                 == DocumentVersionModel.documentId,
+            )
+            .join(
+                latestVersions,
+                (latestVersions.c.documentId == DocumentVersionModel.documentId)
+                & (latestVersions.c.latestVersionNumber == DocumentVersionModel.versionNumber),
+            )
+            .outerjoin(
+                DocumentPageModel,
+                (DocumentPageModel.documentPageId == DocumentChunkModel.documentPageId)
+                & (DocumentPageModel.documentVersionId == DocumentChunkModel.documentVersionId),
             )
             .join(
                 MaterialModel,
@@ -78,6 +103,13 @@ class RagRepository:
                 DocumentChunkModel.status == "EMBEDDED",
                 DocumentChunkModel.embedding.is_not(None),
                 DocumentChunkModel.embeddingModelId.is_not(None),
+                or_(
+                    DocumentChunkModel.evidenceId.is_(None),
+                    (EvidenceModel.status == "ACTIVE")
+                    & (EvidenceModel.studentId == studentId)
+                    & (EvidenceModel.materialId == MaterialModel.materialId)
+                    & (EvidenceModel.documentVersionId == DocumentVersionModel.documentVersionId),
+                ),
             )
         )
 
@@ -129,6 +161,9 @@ class RagRepository:
                         for value in row.embedding
                     ],
                     embeddingModelId=row.embeddingModelId,
+                    documentPageId=row.documentPageId,
+                    pageNumber=row.pageNumber,
+                    chunkIndex=row.chunkIndex,
                 )
             )
 

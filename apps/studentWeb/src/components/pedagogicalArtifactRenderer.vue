@@ -123,6 +123,7 @@ function toggleCard(cardId: string) {
 
 <template>
   <section class="pedagogicalArtifactRenderer">
+    <p v-if="content.coverage" class="pedagogicalIntro" role="status">Este material foi organizado em partes antes da síntese. O conteúdo original foi preservado; consulte-o para os detalhes completos.</p>
     <template
       v-if="
         artifact.artifactType === 'TEACH'
@@ -163,7 +164,7 @@ function toggleCard(cardId: string) {
     </template>
 
     <template v-else-if="artifact.artifactType === 'MIND_MAP'">
-      <InteractiveMindMapRenderer :spec="content" />
+      <InteractiveMindMapRenderer :spec="content" :student-id="artifact.studentId" />
       <details v-if="imageTask">
         <summary>Ilustração antiga associada (não é o mapa atualizado)</summary>
         <ImageGenerationTaskRenderer :task="imageTask" />

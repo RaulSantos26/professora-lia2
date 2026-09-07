@@ -62,6 +62,8 @@ class ImageGenerationWorker:
             session.commit()
             client = ImageServiceClient()
             payload = {"requestId": str(task.imageTaskId), "prompt": prompt, "textPolicy": textPolicy, "title": task.title, "imageMode": task.imageMode, "labels": task.labelsJson or [], "width": 768, "height": 576, "steps": 9}
+            # A generic geometric fallback could misrepresent a map branch.
+            payload['allowFallback'] = not any(str(label).startswith('LIA_MINDMAP_ASSET_V1:') for label in (task.labelsJson or []))
             remote = client.submit(payload)
             while remote.get("status") not in {"READY", "ERROR", "CANCELLED"} and not self._stopEvent.wait(self.pollSeconds):
                 self._apply(task, remote)

@@ -3,6 +3,7 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 from fastapi import UploadFile
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -24,6 +25,7 @@ from app.domain.common.domainError import DomainError
 from app.mappers.materialMapper import MaterialMapper
 from app.persistence.models.materialFileModel import MaterialFileModel
 from app.persistence.models.materialModel import MaterialModel
+from app.persistence.models.evidenceModel import EvidenceModel
 from app.repositories.documentRepository import DocumentRepository
 from app.repositories.learningAttemptRepository import LearningAttemptRepository
 from app.repositories.pedagogicalArtifactRepository import PedagogicalArtifactRepository
@@ -515,7 +517,7 @@ class MaterialService:
                         else None
                     ),
                 )
-                for block in self.documentRepository.listBlocks(
+                for block in self._visibleDocumentBlocks(
                     page.documentPageId
                 )
             ]
@@ -549,6 +551,27 @@ class MaterialService:
                 version.documentVersionId
             ),
         )
+
+    def _visibleDocumentBlocks(self, documentPageId):
+        blocks = self.documentRepository.listBlocks(documentPageId)
+        statuses = {}
+        for blockId, status in self.session.execute(
+            select(EvidenceModel.documentBlockId, EvidenceModel.status).where(
+                EvidenceModel.documentPageId == documentPageId,
+                EvidenceModel.documentBlockId.is_not(None),
+            )
+        ):
+            statuses.setdefault(blockId, set()).add(status)
+        # Presentation only: keep the originals for audit, and never hide a
+        # figure/image or an unaudited block on the basis of missing evidence.
+        return [
+            block for block in blocks
+            if not (
+                block.blockType in {"TEXT", "CAPTION"}
+                and statuses.get(block.documentBlockId)
+                and statuses[block.documentBlockId] <= {"SUPERSEDED", "ARCHIVED"}
+            )
+        ]
 
     def getFilePath(
         self,

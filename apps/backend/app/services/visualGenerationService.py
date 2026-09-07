@@ -1,4 +1,5 @@
 from app.services.ollamaClientService import OllamaClientService
+from app.services.mindMapContentService import generateMindMap
 
 
 class VisualGenerationService:
@@ -14,7 +15,16 @@ class VisualGenerationService:
         modelId: str,
         thinkingEnabled: bool,
         researchReferences: list[dict] | None = None,
+        evidence: list[dict] | None = None,
     ) -> dict:
+        if visualType == 'MIND_MAP' and evidence:
+            # Both entry points share the same full-material budget and contract.
+            from app.services.pedagogicalGenerationService import PedagogicalGenerationService
+            generator = PedagogicalGenerationService()
+            generator.ollama = self.ollama
+            return generator.generate(artifactType='MIND_MAP', context=evidenceContext,
+                instruction=instruction, difficulty='AUTO', questionCount=8,
+                modelId=modelId, thinkingEnabled=thinkingEnabled, evidence=evidence)
         schema = self._schema(visualType)
 
         prompt = f"""
@@ -53,6 +63,9 @@ REFERÊNCIAS VISUAIS CONTROLADAS (somente para enriquecer a representação;
 as evidências do aluno continuam sendo a fonte de verdade):
 {researchReferences or []}
 """.strip()
+
+        if visualType == 'MIND_MAP':
+            return generateMindMap(self.ollama, modelId=modelId, prompt=prompt, think=thinkingEnabled)
 
         return self.ollama.chatStructured(
             modelId=modelId,

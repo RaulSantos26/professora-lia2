@@ -3,6 +3,7 @@ import re
 from uuid import UUID
 
 from sqlalchemy.orm import Session
+from app.domain.common.domainError import DomainError
 
 from app.domain.common.domainError import DomainError
 from app.repositories.materialRepository import MaterialRepository
@@ -10,6 +11,7 @@ from app.repositories.ragRepository import RagCandidate, RagRepository
 from app.services.contentGuardService import ContentGuardService
 from app.services.evidenceCurationService import EvidenceCurationService
 from app.services.ollamaClientService import OllamaClientService
+from app.services.contextBudgetService import ContextBudgetService
 
 
 class PedagogicalContextService:
@@ -32,6 +34,7 @@ class PedagogicalContextService:
         studentSubjectId: UUID | None,
         studentLearningUnitId: UUID | None,
         focusQuery: str | None = None,
+        globalCoverage: bool = False,
     ) -> tuple[str, list[dict], list[UUID]]:
         materials = self.materialRepository.listByStudentId(studentId)
 
@@ -49,6 +52,15 @@ class PedagogicalContextService:
             )
 
         selected = [item for item in selected if item.studyEnabled]
+        def matchesScope(item):
+            return all(expected is None or getattr(item, field, None) == expected for field, expected in (
+                ('studentLearningContextId', studentLearningContextId),
+                ('studentSubjectId', studentSubjectId),
+                ('studentLearningUnitId', studentLearningUnitId),
+            ))
+        if materialIds and any(not matchesScope(item) for item in selected):
+            raise DomainError(code='PEDAGOGICAL_SCOPE_MISMATCH', message='Os materiais precisam pertencer à mesma lição selecionada.', httpStatus=409)
+        selected = [item for item in selected if matchesScope(item)]
 
         if not selected:
             raise DomainError(
@@ -79,7 +91,7 @@ class PedagogicalContextService:
 
         candidates = self.evidenceCuration.curateCandidates(candidates)
 
-        if focusQuery and focusQuery.strip():
+        if focusQuery and focusQuery.strip() and not globalCoverage:
             candidates = self._semanticOrder(
                 candidates,
                 focusQuery.strip(),
@@ -91,6 +103,8 @@ class PedagogicalContextService:
                     str(item.sourceGroupId or item.materialId),
                     item.sourceSequence or 0,
                     item.materialTitle.lower(),
+                    getattr(item, 'pageNumber', 0) or 0,
+                    getattr(item, 'chunkIndex', 0) or 0,
                     item.locator.lower(),
                     str(item.documentChunkId),
                 ),
@@ -99,12 +113,15 @@ class PedagogicalContextService:
         evidence = []
         pieces = []
         totalChars = 0
+        budget = ContextBudgetService()
+        tokenLimit = budget.evidenceBudget(' ' * 5000, {}, thinking=True)
+        totalTokens = 0
 
         for index, candidate in enumerate(
-            candidates[: self.MAX_EVIDENCE],
+            candidates if globalCoverage else candidates[: self.MAX_EVIDENCE],
             start=1,
         ):
-            excerpt = self.evidenceCuration.cleanText(candidate.content)[:2200]
+            excerpt = candidate.content.strip() if globalCoverage else self.evidenceCuration.cleanText(candidate.content)[:2200]
             protected = self.contentGuard.protect(excerpt)
             piece = (
                 f"[{index}] Material: {candidate.materialTitle}\n"
@@ -112,10 +129,11 @@ class PedagogicalContextService:
                 f"Trecho: {protected.content}"
             )
 
-            if totalChars + len(piece) > self.MAX_CONTEXT_CHARS:
+            if not globalCoverage and (totalChars + len(piece) > self.MAX_CONTEXT_CHARS or totalTokens + budget.estimate(piece) > tokenLimit):
                 break
 
             totalChars += len(piece)
+            totalTokens += budget.estimate(piece)
             pieces.append(piece)
             evidence.append(
                 {

@@ -78,6 +78,7 @@ class VisualLearningService:
             studentSubjectId=request.studentSubjectId,
             studentLearningUnitId=request.studentLearningUnitId,
             focusQuery=request.instruction,
+            globalCoverage=request.visualType == 'MIND_MAP',
         )
 
         modelId = request.requestedTextModelId
@@ -126,6 +127,7 @@ class VisualLearningService:
                 modelId=decision.effectiveModelId,
                 thinkingEnabled=thinkingEnabled,
                 researchReferences=references,
+                evidence=evidence,
             )
 
         renderer, spec = self._prepare(
@@ -162,6 +164,11 @@ class VisualLearningService:
         )
 
         self.repository.create(model)
+        if request.visualType == 'MIND_MAP':
+            from app.services.mindMapAssetService import MindMapAssetService
+            model.specJson = MindMapAssetService(self.session).attach(spec,
+                studentId=studentId, unitId=request.studentLearningUnitId,
+                materialIds=materialIds, evidence=evidence, visualTaskId=model.visualTaskId)
         self.session.commit()
         self.session.refresh(model)
 

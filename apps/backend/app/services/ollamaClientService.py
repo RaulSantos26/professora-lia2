@@ -1,5 +1,8 @@
 import base64
 import json
+import logging
+import re
+import time
 import os
 import socket
 import urllib.error
@@ -7,6 +10,9 @@ import urllib.request
 from pathlib import Path
 
 from app.domain.common.domainError import DomainError
+from app.services.contextBudgetService import ContextBudgetService
+
+logger = logging.getLogger(__name__)
 
 
 class OllamaClientService:
@@ -35,6 +41,8 @@ class OllamaClientService:
         timeoutSeconds: int | None = None,
         think: bool | str | None = None,
     ) -> dict:
+        budget = ContextBudgetService().require(prompt, schema, thinking=think, image=imagePath is not None, modelId=modelId)
+        started = time.monotonic()
         message: dict = {
             "role": "user",
             "content": prompt,
@@ -53,7 +61,8 @@ class OllamaClientService:
             "format": schema,
             "options": {
                 "temperature": 0,
-                "num_predict": -1,
+                "num_predict": budget.outputTokens,
+                "num_ctx": budget.contextTokens,
             },
         }
 
@@ -77,23 +86,11 @@ class OllamaClientService:
             or ""
         ).strip()
 
-        # Alguns modelos encerram uma resposta estruturada após preencher
-        # apenas o campo interno "thinking". Preservamos o modo solicitado
-        # na primeira tentativa, mas recuperamos a resposta final uma vez
-        # sem thinking para não transformar esse comportamento em erro para
-        # o aluno.
-        if not content and think is True:
-            retryPayload = dict(payload)
-            retryPayload["think"] = False
-            response = self._post(
-                "/api/chat",
-                retryPayload,
-                effectiveTimeout,
-            )
-            content = (
-                (response.get("message") or {}).get("content")
-                or ""
-            ).strip()
+        logger.info('ollama_generation model=%s context_configured=%s estimated_input=%s prompt_tokens=%s output_reserve=%s generated_tokens=%s thinking=%s duration=%.2f done_reason=%s',
+            modelId, budget.contextTokens, budget.inputTokens, response.get('prompt_eval_count'), budget.outputTokens,
+            response.get('eval_count'), think, time.monotonic() - started, response.get('done_reason'))
+        if response.get('done_reason') == 'length':
+            raise DomainError(code='OLLAMA_OUTPUT_LIMIT', message='A resposta ficou extensa demais para concluir com segurança. Peça uma seção por vez; o conteúdo original foi preservado.', httpStatus=422)
 
         if not content:
             raise DomainError(
@@ -191,6 +188,11 @@ class OllamaClientService:
                 detail = error.read().decode("utf-8")
             except Exception:
                 detail = ""
+
+            if re.search(r'exceeds the available context|n_prompt_tokens|n_ctx|context (?:size|length)', detail, re.I):
+                counts = re.findall(r'(?:request \(\d+ tokens\)|context size \(\d+ tokens\)|n_prompt_tokens\s*[=:]\s*\d+|n_ctx\s*[=:]\s*\d+)', detail)
+                logger.warning('ollama_context_exceeded model=%s metrics=%s', payload.get('model'), counts)
+                raise DomainError(code='OLLAMA_CONTEXT_EXCEEDED', message='Este material é grande e preciso organizar o conteúdo em partes antes de continuar. Tente novamente.', httpStatus=422) from error
 
             raise DomainError(
                 code="OLLAMA_HTTP_ERROR",

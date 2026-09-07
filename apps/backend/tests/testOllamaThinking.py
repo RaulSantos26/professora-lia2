@@ -90,7 +90,7 @@ def testChatStructuredCanExplicitlyDisableThinking(
     assert captured["payload"]["think"] is False
 
 
-def testChatStructuredRetriesWithoutThinkingWhenOnlyTraceIsReturned(
+def testChatStructuredNeverDisablesRequestedThinkingSilently(
     monkeypatch,
 ):
     service = OllamaClientService()
@@ -115,20 +115,10 @@ def testChatStructuredRetriesWithoutThinkingWhenOnlyTraceIsReturned(
 
     monkeypatch.setattr(service, "_post", fakePost)
 
-    result = service.chatStructured(
-        modelId="modelo-thinking",
-        prompt="Explique.",
-        schema={
-            "type": "object",
-            "properties": {
-                "answer": {"type": "string"},
-            },
-            "required": ["answer"],
-        },
-        think=True,
-    )
-
-    assert result == {"answer": "Resposta recuperada"}
-    assert len(payloads) == 2
+    import pytest
+    from app.domain.common.domainError import DomainError
+    with pytest.raises(DomainError) as failure:
+        service.chatStructured(modelId='modelo-thinking', prompt='Explique.', schema={'type':'object'}, think=True)
+    assert failure.value.code == 'OLLAMA_EMPTY_RESPONSE'
+    assert len(payloads) == 1
     assert payloads[0]["think"] is True
-    assert payloads[1]["think"] is False

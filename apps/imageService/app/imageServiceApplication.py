@@ -31,6 +31,7 @@ class ImageJobRequest(BaseModel):
     seed: int | None = None
     steps: int = Field(default=9, ge=1, le=20)
     textPolicy: Literal['NO_TEXT', 'IN_SCENE_MARKS'] = 'NO_TEXT'
+    allowFallback: bool = True
 
 
 class ImageJobResponse(BaseModel):
@@ -163,7 +164,7 @@ class ZImageRuntime:
 
                 usedCleanFallback = False
                 if image is None:
-                    image = self._cleanFallback(job.request)
+                    image = self._cleanFallback(job.request) if job.request.allowFallback else None
                     if image is None:
                         raise ImageTextQualityError(
                             "A ilustração continha texto gerado e não passou no controle de legibilidade."
