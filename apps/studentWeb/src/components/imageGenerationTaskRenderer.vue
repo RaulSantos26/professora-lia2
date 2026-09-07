@@ -2,16 +2,20 @@
 import { computed, nextTick, onBeforeUnmount, ref } from 'vue'
 
 import type { ImageGenerationTaskContract } from '../contracts/imageGenerationContract'
+import IllustrationFigure from './illustrationFigure.vue'
+import IllustrationReading from './illustrationReading.vue'
+import { readImageGuide, guidePrefix } from './imageReadingGuide'
 
 const props = defineProps<{ task: ImageGenerationTaskContract }>()
 const fullscreen = ref(false)
 const closeButton = ref<HTMLButtonElement | null>(null)
 const previewButton = ref<HTMLButtonElement | null>(null)
 const isMindMapCompanion = computed(() => props.task.imageMode === 'MIND_MAP_COMPANION')
+const guide = computed(() => readImageGuide(props.task.labels))
 
 const contextLabels = computed(() =>
   props.task.labels
-    .filter(label => !label.startsWith('Explicação visual:'))
+    .filter(label => !label.startsWith('Explicação visual:') && !label.startsWith(guidePrefix))
     .map(label => label.replace('|', ' — '))
 )
 const explanation = computed(
@@ -63,13 +67,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
       :aria-label="`Abrir ${task.title} em tela cheia`"
       @click="openFullscreen"
     >
-      <img :src="task.assetUrl" :alt="task.title" class="didacticImage" />
+      <IllustrationFigure :src="task.assetUrl" :alt="task.title" :guide="guide" />
       <span>Abrir imagem em tela cheia</span>
     </button>
 
     <p v-if="task.status === 'ERROR'" class="emptyState">{{ task.errorMessage ?? task.message }}</p>
 
-    <section v-if="explanation" class="imageExplanation">
+    <IllustrationReading v-if="guide" :guide="guide" />
+    <section v-if="explanation && !guide" class="imageExplanation">
       <h5>Explicação da Lia</h5>
       <p v-if="explanation">{{ explanation.replace('Explicação visual: ', '') }}</p>
       <ul>
@@ -95,8 +100,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
           </div>
           <button ref="closeButton" type="button" class="closeFullscreen" @click="closeFullscreen">Fechar</button>
         </header>
-        <img :src="task.assetUrl" :alt="task.title" class="imageFullscreenImage" />
-        <section class="fullscreenExplanation">
+        <IllustrationFigure :src="task.assetUrl" :alt="task.title" :guide="guide" max-height="68vh" />
+        <IllustrationReading v-if="guide" :guide="guide" />
+        <section v-else class="fullscreenExplanation">
           <h4>Explicação da Lia</h4>
           <p v-if="explanation">{{ explanation.replace('Explicação visual: ', '') }}</p>
           <ul>

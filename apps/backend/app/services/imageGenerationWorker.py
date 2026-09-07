@@ -69,6 +69,13 @@ class ImageGenerationWorker:
                 self._apply(task, remote)
                 session.commit()
                 remote = client.get(str(task.imageTaskId))
+            if remote.get('status') == 'READY' and task.imageMode != 'MIND_MAP_COMPANION':
+                task.status = 'LABELING'
+                task.progressPercent = 95
+                task.message = 'A Lia está conferindo a imagem e explicando onde olhar.'
+                session.commit()
+                from app.services.imageReadingGuideService import ImageReadingGuideService
+                ImageReadingGuideService().enrich(task, remote.get('assetFilename') or '')
             self._apply(task, remote)
             session.commit()
             return True
