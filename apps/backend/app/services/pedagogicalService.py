@@ -29,6 +29,7 @@ from app.services.pedagogicalGenerationService import PedagogicalGenerationServi
 from app.services.imageGenerationService import ImageGenerationService
 from app.services.thinkingPolicyService import ThinkingPolicyService
 from app.services.studentContentOwnershipService import StudentContentOwnershipService
+from app.services.questionIdentityService import normalizeQuestionIds
 
 
 class PedagogicalService:
@@ -258,6 +259,7 @@ class PedagogicalService:
             content = MindMapAssetService(self.session).attach(content,
                 studentId=artifact.studentId, unitId=artifact.studentLearningUnitId,
                 materialIds=selectedIds, evidence=evidence, artifactId=artifact.pedagogicalArtifactId)
+        content = normalizeQuestionIds(content)
         content["resolvedDifficulty"] = difficulty
 
         self.repository.complete(
@@ -292,7 +294,7 @@ class PedagogicalService:
                 httpStatus=409,
             )
 
-        content = artifact.contentJson or {}
+        content = normalizeQuestionIds(artifact.contentJson or {})
         questions = content.get("questions") or []
 
         if not questions:
@@ -446,7 +448,7 @@ class PedagogicalService:
     ) -> PedagogicalArtifactContract:
         content = self._publicContent(
             model.artifactType,
-            model.contentJson,
+            normalizeQuestionIds(model.contentJson),
         )
 
         evidence = self._consolidateEvidenceForPresentation(

@@ -203,6 +203,7 @@ function toggleCard(cardId: string) {
     </div>
 
     <ExerciseRunner
+      :artifact-id="artifact.pedagogicalArtifactId"
       v-else-if="
         artifact.artifactType === 'EXERCISES'
         || artifact.artifactType === 'QUIZ'

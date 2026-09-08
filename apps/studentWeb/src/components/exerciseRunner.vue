@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, watch } from 'vue'
+import { computed, getCurrentInstance, reactive, watch } from 'vue'
 
 import type {
   LearningAttemptContract
@@ -9,6 +9,7 @@ const props = defineProps<{
   content: Record<string, unknown>
   attempt: LearningAttemptContract | null
   busy: boolean
+  artifactId: string
 }>()
 
 const emit = defineEmits<{
@@ -25,6 +26,7 @@ interface Question {
 }
 
 const answers = reactive<Record<string, string>>({})
+const radioGroupPrefix = `exercise-${getCurrentInstance()?.uid}`
 
 const questions = computed(
   () => (
@@ -35,7 +37,7 @@ const questions = computed(
 )
 
 watch(
-  () => props.content,
+  () => JSON.stringify([props.artifactId, questions.value.map(q => [q.questionId, q.prompt, q.options])]),
   () => {
     for (const key of Object.keys(answers)) {
       delete answers[key]
@@ -104,7 +106,7 @@ function resultFor(questionId: string) {
           <input
             v-model="answers[question.questionId]"
             type="radio"
-            :name="question.questionId"
+            :name="`${radioGroupPrefix}-${index}`"
             :value="option"
             :disabled="Boolean(attempt)"
           />

@@ -381,15 +381,19 @@ async function createStudentSubject(
   payload: StudentSubjectCreateContract
 ) {
   if (!selectedStudentLearningContextId.value) return
+  const contextId = selectedStudentLearningContextId.value
+  const studentId = selectedStudent.value?.studentId
   try {
     const created = await studentContentApiService.createSubject(
-      selectedStudentLearningContextId.value,
+      contextId,
       payload
     )
+    if (selectedStudent.value?.studentId !== studentId || selectedStudentLearningContextId.value !== contextId) return
     studentSubjects.value =
       await studentContentApiService.listSubjects(
         selectedStudentLearningContextId.value
       )
+    await selectMaterialContext(contextId)
     await selectStudentSubject(created)
     await refreshLearningStates()
     successMessage.value =
@@ -417,15 +421,19 @@ async function createStudentLearningUnit(
   payload: StudentLearningUnitCreateContract
 ) {
   if (!selectedStudentSubject.value) return
+  const subjectId = selectedStudentSubject.value.studentSubjectId
   try {
-    await studentContentApiService.createLearningUnit(
-      selectedStudentSubject.value.studentSubjectId,
+    const created = await studentContentApiService.createLearningUnit(
+      subjectId,
       payload
     )
+    if (selectedStudentSubject.value?.studentSubjectId !== subjectId) return
     studentLearningUnits.value =
       await studentContentApiService.listLearningUnits(
         selectedStudentSubject.value.studentSubjectId
       )
+    await selectMaterialSubject(subjectId)
+    selectMaterialUnit(created.studentLearningUnitId)
     await refreshLearningStates()
     successMessage.value =
       'Unidade criada exclusivamente para este aluno/contexto.'
